@@ -1,23 +1,27 @@
 """
-This file contain code for loading and preprocessing the dataset Kaggle Flight Price Prediction Dataset.
+This file contain code for loading and preprocessing the dataset
+Kaggle Flight Price Prediction Dataset.
 Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
-from pathlib import Path
-from prefect import flow, task
-import pandas as pd
 import logging
 import argparse
+from pathlib import Path
+
+import pandas as pd
+from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
+
 from preprocessing.feature_engineering import (
-    create_rounded_arrival_and_departure_times,
-    create_total_duration_minutes,
     create_trip_ids,
     create_weekday_feature,
+    create_total_duration_minutes,
+    create_rounded_arrival_and_departure_times,
 )
 
-logger : logging.Logger = logging.getLogger()
+logger: logging.Logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
+
 
 @task
 def read_csv_file(path: Path) -> pd.DataFrame:
@@ -31,16 +35,17 @@ def read_csv_file(path: Path) -> pd.DataFrame:
         pd.DataFrame: Loaded dataframe
     """
     df: pd.DataFrame = pd.read_csv(
-        path, 
+        path,
         engine="pyarrow",
         header="infer",
     )
     return df
 
+
 @task
 def feature_selection(
-    df: pd.DataFrame, 
-    categorical_features: list[str], 
+    df: pd.DataFrame,
+    categorical_features: list[str],
     numerical_features: list[str],
     target_column: str,
 ) -> pd.DataFrame:
@@ -58,10 +63,11 @@ def feature_selection(
     df[categorical_features] = df[categorical_features].astype("category")
     df[numerical_features] = df[numerical_features].astype(int)
     df = df.filter(
-        items=categorical_features + numerical_features + [target_column], 
+        items=categorical_features + numerical_features + [target_column],
         axis='columns',
     )
     return df
+
 
 @task
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -76,17 +82,35 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     """
     df["Weekday"] = create_weekday_feature(df=df)
     df["TripID"] = create_trip_ids(df=df)
-    df["Departure_hour_rounded"], df["Arrival_hour_rounded"] = create_rounded_arrival_and_departure_times(df=df)
+    df["Departure_hour_rounded"], df["Arrival_hour_rounded"] = (
+        create_rounded_arrival_and_departure_times(df=df)
+    )
     df["Total_duration_minutes"] = create_total_duration_minutes(df=df)
-    
+
     return df
 
+
 @task
-def create_table_artifacts(df: pd.DataFrame, num_feats: list[str], cat_feats: list[str], target_column: str) -> None:
+def create_table_artifacts(
+    df: pd.DataFrame,
+    num_feats: list[str],
+    cat_feats: list[str],
+    target_column: str,
+) -> None:
+    """
+    Creates a number of table artifacts in prefect,
+    saving some dataset info
+
+    Args:
+        df (pd.DataFrame): Dataframe to create tables from
+        num_feats (list[str]): Names of numerical features
+        cat_feats (list[str]): Names of categorical
+        target_column (str): Target column, typically "Price"
+    """
     _ = create_markdown_artifact(
         markdown=df[num_feats].describe().to_markdown(),
-        description="Summary table of saved features."
-        )
+        description="Summary table of saved features.",
+    )
     for cat_feat in cat_feats:
         _ = create_markdown_artifact(
             markdown=df[cat_feat].value_counts().to_markdown(),
@@ -94,8 +118,9 @@ def create_table_artifacts(df: pd.DataFrame, num_feats: list[str], cat_feats: li
         )
     _ = create_markdown_artifact(
         markdown=df[target_column].describe().to_markdown(),
-        description="Summary table of target."
-        )
+        description="Summary table of target.",
+    )
+
 
 @task
 def save_dataset(df: pd.DataFrame, savepath: Path) -> None:
@@ -112,7 +137,8 @@ def save_dataset(df: pd.DataFrame, savepath: Path) -> None:
         compression=None,
         index=False,
     )
-        
+
+
 @flow(log_prints=True)
 def preprocess_data(
     path: Path,
@@ -121,32 +147,57 @@ def preprocess_data(
     numerical_features: list[str],
     savepath: Path,
 ) -> None:
+    """
+    Function for loading data, engineering and selecting
+    features, creating table artifacts and saving
+    the dataset.
+
+    Args:
+        path (Path): Path to source data
+        target_column (str): Target column name
+        categorical_features (list[str]): Categorical feature names
+        numerical_features (list[str]): Numerical feature names
+        savepath (Path): Path where to save processed dataframe
+    """
     df = read_csv_file(path)
     df = feature_engineering(df)
     df = feature_selection(df, categorical_features, numerical_features, target_column)
-    
+
     create_table_artifacts(df, numerical_features, categorical_features, target_column)
 
     save_dataset(df, savepath)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=Path, help="Path to data csv file to load.")
-    parser.add_argument("-cat-feats", "--categorical_features", type=str, nargs="*", help="Which categorical features to use.")
-    parser.add_argument("-num-feats", "--numerical_features", type=str, nargs="*", help="Which numerical features to use.")
-    parser.add_argument("--target", type=str, default="Price", help="Target column for predictions.")
+    parser.add_argument(
+        "-cat-feats",
+        "--categorical_features",
+        type=str,
+        nargs="*",
+        help="Which categorical features to use.",
+    )
+    parser.add_argument(
+        "-num-feats",
+        "--numerical_features",
+        type=str,
+        nargs="*",
+        help="Which numerical features to use.",
+    )
+    parser.add_argument(
+        "--target", type=str, default="Price", help="Target column for predictions."
+    )
     args = parser.parse_args()
 
     kwargs = {
-            "path": args.path,
-            "target_column": args.target,
-            "categorical_features": args.categorical_features,
-            "numerical_features": args.numerical_features,
-            "savepath": "data/final_features.csv",
-        }
-    preprocess_data(
-        **kwargs
-    )
+        "path": args.path,
+        "target_column": args.target,
+        "categorical_features": args.categorical_features,
+        "numerical_features": args.numerical_features,
+        "savepath": "data/final_features.csv",
+    }
+    preprocess_data(**kwargs)
     # preprocess_data.serve(
     #     tags=["data_preprocessing", "dev:magnus"],
     #     parameters=kwargs,
