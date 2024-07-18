@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
+from sklearn.model_selection import train_test_split
 
 from preprocessing.feature_engineering import (
     create_trip_ids,
@@ -96,6 +97,7 @@ def create_table_artifacts(
     num_feats: list[str],
     cat_feats: list[str],
     target_column: str,
+    dataset_name: str,
 ) -> None:
     """
     Creates a number of table artifacts in prefect,
@@ -109,16 +111,16 @@ def create_table_artifacts(
     """
     _ = create_markdown_artifact(
         markdown=df[num_feats].describe().to_markdown(),
-        description="Summary table of saved features.",
+        description=f"[{dataset_name}]: Summary table of saved features.",
     )
     for cat_feat in cat_feats:
         _ = create_markdown_artifact(
             markdown=df[cat_feat].value_counts().to_markdown(),
-            description=f"Value count of categorical feature {cat_feat}",
+            description=f"[{dataset_name}]: Value count of categorical feature {cat_feat}",
         )
     _ = create_markdown_artifact(
         markdown=df[target_column].describe().to_markdown(),
-        description="Summary table of target.",
+        description=f"[{dataset_name}]: Summary table of target.",
     )
 
 
@@ -139,13 +141,41 @@ def save_dataset(df: pd.DataFrame, savepath: Path) -> None:
     )
 
 
+@task
+def create_test_train_split(
+    df: pd.DataFrame,
+    train_size_frac: float = 0.7,
+    random_seed: int = 13371337,
+) -> tuple[list, list]:
+    """
+    Splits given dataframe into a test and train/val split.
+
+    Args:
+        df (pd.DataFrame): Dataframe to be splitted
+        train_size_frac (float, optional): Fraction to be used for training. Defaults to 0.7.
+        random_seed (int, optional): Seed for reproducibility. Defaults to 13371337.
+
+    Returns:
+        tuple[list, list]: Tuple with training and test data.
+    """
+    train_data, test_data = train_test_split(
+        df,
+        train_size=train_size_frac,
+        random_state=random_seed,
+        shuffle=True,
+    )
+    return train_data, test_data
+
+
 @flow(log_prints=True)
 def preprocess_data(
     path: Path,
     target_column: str,
     categorical_features: list[str],
     numerical_features: list[str],
-    savepath: Path,
+    train_size: float,
+    random_seed: int,
+    savedir: Path,
 ) -> None:
     """
     Function for loading data, engineering and selecting
@@ -157,15 +187,38 @@ def preprocess_data(
         target_column (str): Target column name
         categorical_features (list[str]): Categorical feature names
         numerical_features (list[str]): Numerical feature names
-        savepath (Path): Path where to save processed dataframe
+        train_size (float): Fraction of data to use as training set.
+            Expected to be strictly between 0 and 1.
+        random_seed (int): Random seed for reproducing data split.
+        savepath (Path): Path where to load and save data.
     """
+    assert 0 < train_size < 1, f"Got train_size={train_size}. Must be strictly between 0 and 1."
+
     df = read_csv_file(path)
     df = feature_engineering(df)
     df = feature_selection(df, categorical_features, numerical_features, target_column)
 
-    create_table_artifacts(df, numerical_features, categorical_features, target_column)
+    create_table_artifacts(
+        df, numerical_features, categorical_features, target_column, "final_features"
+    )
+    save_dataset(df, savedir / "final_features.parquet")
 
-    save_dataset(df, savepath)
+    data_split: list[pd.DataFrame] = create_test_train_split(
+        df=df,
+        train_size_frac=train_size,
+        random_seed=random_seed,
+    )
+    test_data, train_data = data_split
+
+    create_table_artifacts(
+        test_data, numerical_features, categorical_features, target_column, "test_data"
+    )
+    create_table_artifacts(
+        train_data, numerical_features, categorical_features, target_column, "train_data"
+    )
+
+    save_dataset(train_data, savedir / "train_data.parquet")
+    save_dataset(test_data, savedir / "test_data.parquet")
 
 
 if __name__ == "__main__":
@@ -188,6 +241,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--target", type=str, default="Price", help="Target column for predictions."
     )
+    parser.add_argument(
+        "--train-size",
+        type=float,
+        default=0.7,
+        help="Fraction of data to use as training data. \
+            Expected to be between 0 and 1. Test size will be 1-(train-size).",
+    )
+    parser.add_argument(
+        "--seed", type=int, default=13371337, help="Random seed for test/train split."
+    )
+    parser.add_argument(
+        "--savedir", type=Path, default="data", help="Directory where to save data to."
+    )
     args = parser.parse_args()
 
     kwargs = {
@@ -195,7 +261,9 @@ if __name__ == "__main__":
         "target_column": args.target,
         "categorical_features": args.categorical_features,
         "numerical_features": args.numerical_features,
-        "savepath": "data/final_features.csv",
+        "train_size": args.train_size,
+        "random_seed": args.seed,
+        "savedir": args.savedir,
     }
     preprocess_data(**kwargs)
     # preprocess_data.serve(
