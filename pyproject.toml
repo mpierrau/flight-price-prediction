@@ -38,7 +38,10 @@ pre-commit = "*"
 
 [tool.pylint.messages_control]
 disable = [
+    "invalid-name",
 ]
+[tool.pylint.typecheck]
+signature-mutators=['click.decorators.option']
 
 [tool.black]
 line-length = 100
