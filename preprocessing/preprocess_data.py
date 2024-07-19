@@ -6,6 +6,7 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 
 import logging
 import argparse
+import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -65,7 +66,7 @@ def feature_selection(
     df[numerical_features] = df[numerical_features].astype(int)
     df = df.filter(
         items=categorical_features + numerical_features + [target_column],
-        axis='columns',
+        axis="columns",
     )
     return df
 
@@ -158,13 +159,13 @@ def create_test_train_split(
     Returns:
         tuple[list, list]: Tuple with training and test data.
     """
-    train_data, test_data = train_test_split(
+    train_data, validation_data = train_test_split(
         df,
         train_size=train_size_frac,
         random_state=random_seed,
         shuffle=True,
     )
-    return train_data, test_data
+    return train_data, validation_data
 
 
 @flow(log_prints=True)
@@ -194,6 +195,7 @@ def preprocess_data(
     """
     assert 0 < train_size < 1, f"Got train_size={train_size}. Must be strictly between 0 and 1."
 
+    now = datetime.datetime.now().strftime(format="%Y%m%d_%H%M%S")
     df = read_csv_file(path)
     df = feature_engineering(df)
     df = feature_selection(df, categorical_features, numerical_features, target_column)
@@ -201,24 +203,24 @@ def preprocess_data(
     create_table_artifacts(
         df, numerical_features, categorical_features, target_column, "final_features"
     )
-    save_dataset(df, savedir / "final_features.parquet")
+    save_dataset(df, savedir / f"final_features_{now}.parquet")
 
     data_split: list[pd.DataFrame] = create_test_train_split(
         df=df,
         train_size_frac=train_size,
         random_seed=random_seed,
     )
-    test_data, train_data = data_split
+    validation_data, train_data = data_split
 
     create_table_artifacts(
-        test_data, numerical_features, categorical_features, target_column, "test_data"
+        validation_data, numerical_features, categorical_features, target_column, "validation_data"
     )
     create_table_artifacts(
         train_data, numerical_features, categorical_features, target_column, "train_data"
     )
 
-    save_dataset(train_data, savedir / "train_data.parquet")
-    save_dataset(test_data, savedir / "test_data.parquet")
+    save_dataset(train_data, savedir / f"train_data_{now}.parquet")
+    save_dataset(validation_data, savedir / f"validation_data_{now}.parquet")
 
 
 if __name__ == "__main__":
