@@ -229,6 +229,13 @@ if __name__ == "__main__":
         "--categorical_features",
         type=str,
         nargs="*",
+        default=[
+            "Airline",
+            "Weekday",
+            "TripID",
+            "Departure_hour_rounded",
+            "Arrival_hour_rounded",
+        ],
         help="Which categorical features to use.",
     )
     parser.add_argument(
@@ -236,6 +243,7 @@ if __name__ == "__main__":
         "--numerical_features",
         type=str,
         nargs="*",
+        default=["Total_Stops", "Total_duration_minutes"],
         help="Which numerical features to use.",
     )
     parser.add_argument(
