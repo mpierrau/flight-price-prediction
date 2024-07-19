@@ -41,6 +41,8 @@ pre-commit = "*"
 disable = [
     "invalid-name",
     "too-many-arguments",
+    "no-value-for-parameter",
+    "too-many-locals",
 ]
 
 [tool.black]
