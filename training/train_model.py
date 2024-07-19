@@ -5,20 +5,18 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 
 import os
 from typing import Any
-from pathlib import Path
 
-import click
 import mlflow
-import pandas as pd
 import numpy.typing as npt
-from prefect import flow, task
+from prefect import task
 from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction import DictVectorizer
 
-from training.utils import setup_experiment, calculate_metrics, get_model_and_params
+from training.utils import calculate_metrics
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI")
 EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME")
+DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 
 @task
@@ -65,90 +63,49 @@ def evaluate_model(
 
 
 @task
-def prepare_data(
-    df_path: Path,
-    target_column: str,
-) -> tuple[dict[str, Any], npt.ArrayLike]:
-    """
-    Code for creating training dicts and target arrays.
-
-    Args:
-        df (pd.DataFrame): Dataframe with preprocessed data (features)
-        target_column (str): Which column is to be used as target.
-
-    Returns:
-        tuple[dict[str, Any], npt.ArrayLike[float]]:
-            A dictionary with training data entries and an array with corresponding labels
-    """
-    df = pd.read_parquet(df_path)
-    dicts = df.drop(columns=target_column).to_dict(orient='records')
-    y_arr = df[target_column].values
-    return dicts, y_arr
-
-
-@click.command()
-@click.argument("train_data_path", type=click.Path(exists=True))
-@click.argument("val_data_path", type=click.Path(exists=True))
-@click.option(
-    "-m",
-    "--model_name",
-    type=click.Choice(choices=["LinearRegression", "Lasso", "Ridge"]),
-    help="Which model type to train.",
-)
-@click.option("-t", "--target_column", type=str, default="Price", help="Target column name.")
-@flow
 def train_and_evaluate(
-    train_data_path: Path,
-    val_data_path: Path,
-    target_column: str,
-    model_name: str,
-) -> None:
+    model_class: Any,
+    model_pars: dict,
+    train_data: tuple[dict, npt.ArrayLike],
+    val_data: tuple[dict, npt.ArrayLike],
+    experiment_id: str,
+    pars_to_log: dict,
+    log_model: bool = False,
+) -> dict[str, float]:
     """
-    Trains specified model on specified training data with given
-    target column as target, and evaluates on specified validation data.
-    Tracked on mlflow server with given uri and exp name.
 
     Args:
-        train_data_path (Path): Path to training data parquet
-        val_data_path (Path): Path to validation data parquet
-        target_column (str): Column to use as target
-        model_name (str): Name of sklearn model class.
-        experiment_name (str | None, optional):
-            Mlflow tracking experiment name. Defaults to None.
-        mlflow_tracking_uri (str | None, optional):
-            Mlflow tracking URI (include protocol and port). Defaults to None.
+        model_class (Any): Model class to use.
+        model_pars (dict): Model parameters.
+        train_data (tuple[dict, npt.ArrayLike]): A tuple with training data and ground truth array
+        val_data (tuple[dict, npt.ArrayLike]): A tuple with validation data and ground truth array
+        experiment_id (str): MLFlow experiment id for tracking
+        pars_to_log (dict): MLFlow tracking id for tracking
+        log_model (bool): Whether to save model artifacts to mlflow.
+            Good to not do during hyperopt tuning.
     """
-    _, exp_id = setup_experiment(
-        experiment_name=EXPERIMENT_NAME,
-        tracking_uri=MLFLOW_TRACKING_URI,
-    )
-    # Load data
-    train_dicts, y_train = prepare_data(train_data_path, target_column)
-    val_dicts, y_val = prepare_data(val_data_path, target_column)
-
     # Setup vectorizer and model
     dv = DictVectorizer()
-    model_class, model_params = get_model_and_params(model_name=model_name)
+    model_instance = model_class(**model_pars)
 
     # Create a pipeline
     pipeline = make_pipeline(
         dv,
-        model_class(**model_params),
+        model_instance,
     )
     # -1 means use all available processors for multiproc when fitting and predicting
 
-    with mlflow.start_run(experiment_id=exp_id):
-        mlflow.set_tag("developer", "magnus")
-        mlflow.log_param("train-data-path", train_data_path)
-        mlflow.log_param("val-data-path", val_data_path)
-        mlflow.log_params(params=model_params)
+    with mlflow.start_run(experiment_id=experiment_id):
+        mlflow.set_tag("developer", DEVELOPER_NAME)
+        mlflow.set_tag("model_name", model_instance.__class__.__name__)
+        mlflow.log_params(pars_to_log)
+        mlflow.log_params(model_pars)
 
-        trained_pipeline = train_model(pipeline, train_dicts, y_train)
-        metrics = evaluate_model(trained_pipeline, val_dicts, y_val)
+        trained_pipeline = train_model(pipeline, *train_data)
+        metrics = evaluate_model(trained_pipeline, *val_data)
 
-        mlflow.log_metrics(metrics=metrics)
-        mlflow.sklearn.log_model(pipeline, artifact_path="model")
+        mlflow.log_metrics(metrics)
+        if log_model:
+            mlflow.sklearn.log_model(pipeline, artifact_path="model")
 
-
-if __name__ == '__main__':
-    train_and_evaluate()
+    return metrics
