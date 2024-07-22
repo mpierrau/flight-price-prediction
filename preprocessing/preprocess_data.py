@@ -147,7 +147,7 @@ def create_test_train_split(
     df: pd.DataFrame,
     train_size_frac: float = 0.7,
     random_seed: int = 13371337,
-) -> tuple[list, list]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Splits given dataframe into a test and train/val split.
 
@@ -205,7 +205,7 @@ def preprocess_data(
     )
     save_dataset(df, savedir / f"final_features_{now}.parquet")
 
-    data_split: list[pd.DataFrame] = create_test_train_split(
+    data_split = create_test_train_split(
         df=df,
         train_size_frac=train_size,
         random_seed=random_seed,
