@@ -56,7 +56,7 @@ DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
     "-t",
     "--target-column",
     type=str,
-    default="Price",
+    default="price",
     help="Name of column to predict",
 )
 @click.option(
