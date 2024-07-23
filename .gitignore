@@ -2,6 +2,7 @@
 notebooks/
 data/flight_dataset.csv
 mlruns/
+app/dotenv
 # ---
 
 # Byte-compiled / optimized / DLL files
