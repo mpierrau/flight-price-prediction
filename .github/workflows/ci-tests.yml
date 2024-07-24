@@ -23,6 +23,11 @@ jobs:
         with:
             python-version: 3.11.9
 
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+        with:
+            virtualenvs-create: false
+
       - name: Install dependencies
         run: poetry lock --no-update && poetry install
 
