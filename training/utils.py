@@ -3,7 +3,6 @@ Helper functions for model training, tuning and evaluation
 Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
-from typing import Any
 from pathlib import Path
 
 import mlflow
@@ -19,7 +18,15 @@ from sklearn.linear_model import Lasso, Ridge, LinearRegression
 
 def get_model_and_params(
     model_name: str,
-) -> tuple[type[LinearRegression] | type[Lasso] | type[Ridge]]:
+) -> tuple[
+    type[LinearRegression]
+    | type[Lasso]
+    | type[Ridge]
+    | type[RandomForestRegressor]
+    | type[XGBRegressor],
+    dict,
+    dict,
+]:
     """
     Returns models and parameters depending on given string. Iniitial solution.
 
@@ -90,13 +97,13 @@ def get_model_and_params(
     return model, static_pars, search_space
 
 
-def calculate_metrics(predicted: list[Any], actual: list[Any]) -> dict[str, float]:
+def calculate_metrics(predicted: npt.ArrayLike, actual: npt.ArrayLike) -> dict[str, float]:
     """
     Calculate metrics of the model predictions.
 
     Args:
-        predicted (list[Any]): Predicted values
-        actual (list[Any]): Ground truth
+        predicted (npt.ArrayLike): Predicted values
+        actual (npt.ArrayLike): Ground truth
 
     Returns:
         dict[str, float]: Dictionary with calculated metrics
@@ -109,8 +116,8 @@ def calculate_metrics(predicted: list[Any], actual: list[Any]) -> dict[str, floa
 
 
 def setup_experiment(
-    experiment_name: str | None = None,
-    tracking_uri: str | None = None,
+    experiment_name: str,
+    tracking_uri: str | Path,
 ) -> tuple[mlflow.MlflowClient, str]:
     """
     Helper method for setting up a mlflow experiment and returning client and id
@@ -139,7 +146,7 @@ def setup_experiment(
 def prepare_data(
     df_path: Path,
     target_column: str,
-) -> tuple[dict[str, Any], npt.ArrayLike]:
+) -> tuple[pd.DataFrame, npt.ArrayLike]:
     """
     Code for creating training dicts and target arrays.
 
@@ -152,6 +159,6 @@ def prepare_data(
             A dictionary with training data entries and an array with corresponding labels
     """
     df = pd.read_parquet(df_path)
-    dicts = df.drop(columns=target_column).to_dict(orient="records")
-    y_arr = df[target_column].values
-    return dicts, y_arr
+    y_arr = df[target_column].to_numpy()
+    df = df.drop(columns=target_column)
+    return df, y_arr
