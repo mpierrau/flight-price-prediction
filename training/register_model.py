@@ -6,6 +6,7 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
 import os
+import sys
 from pathlib import Path
 
 import tqdm
@@ -18,8 +19,8 @@ from mlflow.tracking import MlflowClient
 from training.utils import prepare_data, setup_experiment, get_model_and_params
 from training.train_model import train_and_evaluate
 
-EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME")
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI")
+EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 
@@ -97,13 +98,16 @@ def run_register_model(
 
     # Retrieve the top_n model runs and log the models
     experiment = client.get_experiment_by_name(exp_name or EXPERIMENT_NAME)
-    runs = client.search_runs(
-        experiment_ids=experiment.experiment_id,
-        run_view_type=ViewType.ACTIVE_ONLY,
-        max_results=top_n,
-        order_by=["metrics.rmse ASC"],
-    )
-    pars_to_log = {
+    if not experiment:
+        runs = []
+    else:
+        runs = client.search_runs(
+            experiment_ids=experiment.experiment_id,
+            run_view_type=ViewType.ACTIVE_ONLY,
+            max_results=top_n,
+            order_by=["metrics.rmse ASC"],
+        )
+    pars_to_log: dict[str, Path | int] = {
         "train-data-path": train_data_path,
         "val-data-path": val_data_path,
     }
@@ -137,6 +141,10 @@ def run_register_model(
 
     # Select the model with the lowest test RMSE
     experiment = client.get_experiment_by_name(name=new_exp_name)
+    if not experiment:
+        print(f"Experiment not found {new_exp_name}!")
+        sys.exit()
+
     best_run: Run = client.search_runs(
         experiment_ids=experiment.experiment_id,
         run_view_type=ViewType.ACTIVE_ONLY,
