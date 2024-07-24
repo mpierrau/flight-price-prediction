@@ -1,3 +1,11 @@
+# Manually added
+notebooks/
+data/flight_dataset.csv
+mlruns/
+app/dotenv
+*.parquet
+# ---
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
