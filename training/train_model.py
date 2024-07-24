@@ -106,6 +106,12 @@ def train_and_evaluate(
 
         mlflow.log_metrics(metrics)
         if log_model:
-            mlflow.sklearn.log_model(pipeline, artifact_path="model")
+            input_example = train_data[0].sample(n=1)
+            mlflow.sklearn.log_model(
+                pipeline,
+                artifact_path="model",
+                input_example=input_example,
+                code_paths=["training/feature_engineering.py"],
+            )
 
     return metrics

@@ -3,6 +3,7 @@ Helper functions for model training, tuning and evaluation
 Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
+from typing import Any
 from pathlib import Path
 
 import mlflow
@@ -11,7 +12,7 @@ import numpy.typing as npt
 from xgboost import XGBRegressor
 from hyperopt import hp
 from hyperopt.pyll import scope
-from sklearn.metrics import root_mean_squared_error
+from sklearn.metrics import root_mean_squared_error  # type: ignore
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Lasso, Ridge, LinearRegression
 
@@ -23,9 +24,10 @@ def get_model_and_params(
     | type[Lasso]
     | type[Ridge]
     | type[RandomForestRegressor]
-    | type[XGBRegressor],
-    dict,
-    dict,
+    | type[XGBRegressor]
+    | None,
+    dict[str, Any],
+    dict[str, Any],
 ]:
     """
     Returns models and parameters depending on given string. Iniitial solution.
@@ -85,7 +87,6 @@ def get_model_and_params(
                 "gamma": scope.float(hp.quniform("gamma", 5, 9, 0.1)),
                 "max_depth": scope.int(hp.quniform("max_depth", 6, 9, 1)),
                 "min_child_weight": scope.int(hp.quniform("min_child_weight", 1, 20, 1)),
-                "colsample_bytree": scope.float(hp.uniform("colsample_bytree", 0.6, 1)),
                 "n_estimators": scope.int(hp.quniform("n_estimators", 10, 40, 1)),
                 "lambda": scope.float(hp.uniform("lambda", 0, 3)),
             }
