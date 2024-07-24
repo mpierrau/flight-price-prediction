@@ -88,7 +88,7 @@ class Handler:
         except JSONDecodeError as e:
             self.logger.error(
                 "Failed to deserialize JSON body",
-                exception=e,
+                exc_info=True,
             )
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -118,7 +118,7 @@ class Handler:
         preds = self.model.predict(df)
         predictions = [
             {
-                'model': 'flight-cost-prediction',
+                'model': 'flight-price-prediction',
                 'version': self.mlflow_model_uri,
                 'prediction': {
                     'ride_duration': pred.item(),

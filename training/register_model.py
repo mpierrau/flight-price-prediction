@@ -43,7 +43,7 @@ DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
     "-e",
     "--exp-name",
     type=str,
-    default="flight-cost-prediction",
+    default="flight-price-prediction",
     help="Name of MLFlow experiment",
 )
 @click.option(
