@@ -5,24 +5,27 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 
 import os
 from typing import Any
+from pathlib import Path
 
 import mlflow
+import pandas as pd
 import numpy.typing as npt
 from prefect import task
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import FunctionTransformer, make_pipeline
+from feature_engineering import preprocessing_pipeline
 from sklearn.feature_extraction import DictVectorizer
 
 from training.utils import calculate_metrics
 
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI")
-EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME")
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
+EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 
 @task
 def train_model(
     model: Any,
-    X_train: dict,
+    X_train: pd.DataFrame,
     y_train: npt.ArrayLike,
 ) -> Any:
     """
@@ -31,7 +34,7 @@ def train_model(
 
     Args:
         model (Any): a model or sklearn pipeline
-        X_train (dict): dictionary with data entries
+        X_train (pd.DataFrame): dictionary with data entries
         y_train (npt.ArrayLike): array with target values
 
     Returns:
@@ -44,7 +47,7 @@ def train_model(
 @task
 def evaluate_model(
     model: Any,
-    X_val: npt.ArrayLike,
+    X_val: pd.DataFrame,
     y_val: npt.ArrayLike,
 ) -> dict[str, float]:
     """
@@ -52,7 +55,7 @@ def evaluate_model(
 
     Args:
         model (Any): model or pipeline to predict with
-        X_val (npt.ArrayLike): Test/validation data
+        X_val (pd.DataFrame): Test/validation data
         y_val (npt.ArrayLike): Test/validation ground truth values
 
     Returns:
@@ -66,10 +69,10 @@ def evaluate_model(
 def train_and_evaluate(
     model_class: Any,
     model_pars: dict,
-    train_data: tuple[dict, npt.ArrayLike],
-    val_data: tuple[dict, npt.ArrayLike],
+    train_data: tuple[pd.DataFrame, npt.ArrayLike],
+    val_data: tuple[pd.DataFrame, npt.ArrayLike],
     experiment_id: str,
-    pars_to_log: dict,
+    pars_to_log: dict[str, Path | int],
     log_model: bool = False,
 ) -> dict[str, float]:
     """
@@ -84,16 +87,13 @@ def train_and_evaluate(
         log_model (bool): Whether to save model artifacts to mlflow.
             Good to not do during hyperopt tuning.
     """
-    # Setup vectorizer and model
-    dv = DictVectorizer()
+    # Create a pipeline with preprocessing, vectorizer and model
     model_instance = model_class(**model_pars)
-
-    # Create a pipeline
     pipeline = make_pipeline(
-        dv,
+        FunctionTransformer(preprocessing_pipeline, validate=False),
+        DictVectorizer(),
         model_instance,
     )
-    # -1 means use all available processors for multiproc when fitting and predicting
 
     with mlflow.start_run(experiment_id=experiment_id):
         mlflow.set_tag("developer", DEVELOPER_NAME)

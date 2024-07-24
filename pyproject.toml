@@ -44,7 +44,8 @@ disable = [
     "too-many-arguments",
     "no-value-for-parameter",
     "too-many-locals",
-    "import-error"
+    "import-error",
+    "ungrouped-imports"
 ]
 
 [tool.black]
