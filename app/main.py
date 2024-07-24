@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 class FlightPricePredictionApp(FastAPI):
     """
-    FastAPI App for predicting flight price
+    FastAPI App for predicting flight price.
     """
 
     def __init__(self, logger: logging.Logger, settings: AppSettings, *args, **kwargs) -> None:
