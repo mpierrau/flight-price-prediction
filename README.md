@@ -28,5 +28,25 @@ I didn't like Mage AI so I'm using Prefect.
     - `EXPERIMENT_NAME` annd `MLFLOW_URI` for MLFlow tracking
 1. Run training runs for various models to find the best fit:
 ```bash
-python training/optimization.py data/{training_data}.parquet data/{validation_data}.parquet --model-name XGBRegressor --num-trials 50 --loss-key rmse --target-column Price --seed 123456
+python training/optimization.py data/{training_data}.parquet data/{validation_data}.parquet --model-name XGBRegressor --num-trials 50 --loss-key rmse --target-column price --seed 123456
+```
+
+## Inference
+```bash
+curl -X "POST" "http://localhost:8080/predict" -d '{
+    "prediction_id":["1","2"],
+    "airline":["IndiGo","IndiGo"],
+    "source":["Banglore","Banglore"],
+    "destination":["New Delhi","Kolkata"],
+    "total_stops":[1,2],
+    "date":[24, 21],
+    "month":[7, 2],
+    "year":[2024, 1992],
+    "dep_hours":[22, 4],
+    "dep_min":[44, 4],
+    "arrival_hours":[14, 0],
+    "arrival_min":[40, 0],
+    "duration_hours":[2, 5],
+    "duration_min":[45, 50]
+    }'
 ```
