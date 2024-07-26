@@ -29,7 +29,7 @@ class Handler:
         self.mlflow_model_uri = mlflow_model_uri
 
         self.router.add_api_route(
-            "/predict",
+            "/invocations",
             self.predict,
             methods=["POST"],
             status_code=HTTPStatus.OK,
