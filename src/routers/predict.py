@@ -4,13 +4,14 @@ A FastAPI wrapper around the prediction model
 
 from http import HTTPStatus
 from json import JSONDecodeError
-from typing import Any
 from logging import Logger
 
 import mlflow
 import pandas as pd
-from fastapi import Request, APIRouter, HTTPException
-from routers.api_models import PredictionPostAPIModel
+from fastapi import Request, APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
+
+from .api_models import PredictionPostAPIModel
 
 
 class Handler:
@@ -56,7 +57,7 @@ class Handler:
             )
             raise e
 
-    async def predict(self, req: Request) -> dict[str, list[dict[str, Any]]]:
+    async def predict(self, req: Request) -> JSONResponse:
         """
         Method for predicting the flight price given a request with
         data.
@@ -127,4 +128,4 @@ class Handler:
             }
             for pred_id, pred in zip(pred_ids, preds)
         ]
-        return {"predictions": predictions}
+        return JSONResponse(content={"predictions": predictions}, status_code=status.HTTP_200_OK)
