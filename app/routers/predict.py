@@ -35,7 +35,7 @@ class Handler:
             status_code=HTTPStatus.OK,
         )
 
-        self.load_model(mlflow_model_uri)
+        self.load_model(self.mlflow_model_uri)
 
     def load_model(self, mlflow_model_uri: str) -> None:
         """
