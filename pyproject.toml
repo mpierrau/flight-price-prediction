@@ -45,6 +45,7 @@ disable = [
     "too-many-arguments",
     "no-value-for-parameter",
     "too-many-locals",
+    "too-few-public-methods",
     "import-error",
     "ungrouped-imports"
 ]
