@@ -4,6 +4,8 @@ data/flight_dataset.csv
 mlruns/
 app/dotenv
 *.parquet
+.terraform/
+**/.terraform.lock.hcl
 # ---
 
 # Byte-compiled / optimized / DLL files

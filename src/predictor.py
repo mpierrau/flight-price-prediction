@@ -2,16 +2,14 @@
 Code for the FastAPI app
 """
 
-import sys
 import asyncio
 import logging
 
 import uvicorn
+from fastapi import FastAPI
+
 from config import AppSettings
-from mlflow import MlflowException
-from fastapi import FastAPI, HTTPException
 from routers import predict, internal
-from pydantic import ValidationError
 
 
 class FlightPricePredictionApp(FastAPI):
@@ -63,25 +61,3 @@ class FlightPricePredictionApp(FastAPI):
 
         # Wait until all tasks have finished
         await asyncio.gather(t1)
-
-
-if __name__ == "__main__":
-    svc_logger = logging.getLogger()
-    svc_logger.setLevel(logging.INFO)
-    try:
-        app_settings = AppSettings()
-    except ValidationError as err:
-        svc_logger.fatal(
-            msg="Settings parsing failed.",
-            exc_info=True,
-        )
-        sys.exit(1)
-
-    try:
-        asyncio.run(FlightPricePredictionApp(svc_logger, app_settings, debug=True).run())
-    except (HTTPException, MlflowException) as ex:
-        svc_logger.fatal(
-            msg="Exception bubbled up to the top.",
-            exc_info=True,
-        )
-        sys.exit(1)
