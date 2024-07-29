@@ -28,7 +28,7 @@ def test_valid_http_request() -> None:
         "duration_min": [45, 50],
     }
 
-    url = 'http://localhost:8080/predict'
+    url = 'http://localhost:8080/invocations'
 
     response = requests.post(url, json=flight_info, timeout=10)
 
