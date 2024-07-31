@@ -1,5 +1,6 @@
 
 resource "aws_iam_role" "role" {
+name = "ec2-iam-mlops-zoomcamp-${var.env}"
  path = "/"
  assume_role_policy = <<EOF
 {

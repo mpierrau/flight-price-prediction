@@ -26,12 +26,8 @@ variable "model_bucket_name" {
   type = string
 }
 
-variable "ec2_instance_type" {
-  description = "Type of EC2 instance to use"
+variable "env" {
+  description = "Set variable depending on environemnt - appended to resources."
   type = string
-}
-
-variable "model_id" {
-  description = "MLFlow model ID, {Experiment ID}/{Run ID}"
-  type = string
+  default = "stg"
 }

@@ -4,7 +4,7 @@ resource "tls_private_key" "key" {
 }
 
 resource "aws_key_pair" "default" {
-  key_name = "keypair"
+  key_name = "keypair-mlops-zoomcamp-proj-${var.env}"
   public_key = tls_private_key.key.public_key_openssh
 }
 

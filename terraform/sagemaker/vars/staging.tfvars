@@ -1,6 +1,6 @@
-ecr_repo_name = "flight-price-prediction-prod"
+model_ecr_image = "033377438032.dkr.ecr.eu-north-1.amazonaws.com/flight-price-prediction_mlops-zoomcamp-stg"
 ecr_image_tag = "latest"
-docker_image_local_path = "../Dockerfile"
 model_bucket_name = "mlflow-models-magnus-dev"
 ec2_instance_type = "ml.m5.large"
 model_id = "5/d1f695107a864442a75b53638eef080f"
+env = "stg"

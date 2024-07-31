@@ -34,3 +34,9 @@ variable "model_uri" {
   description = "URI to the MLFlow model"
   type = string
 }
+
+variable "env" {
+  description = "Set variable depending on environemnt - appended to resources."
+  type = string
+  default = "stg"
+}
