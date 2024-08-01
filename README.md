@@ -3,7 +3,7 @@ My Final Project for the DataTalks MLOPS Zoomcamp 2024
 
 ## Preparations
 ### Data
-1. Download `flight_dataset.csv` from [Kaggle Flight Price Prediction Dataset](https://www.kaggle.com/datasets/shubhambathwal/flight-price-prediction/data).
+1. Download `flight_dataset.csv` from [Kaggle Flight Price Prediction Dataset](https://www.kaggle.com/datasets/viveksharmar/flight-price-data/data).
 2. Place it in the `data/` directory
 
 ## Installation
