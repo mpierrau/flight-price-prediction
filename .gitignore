@@ -5,6 +5,8 @@ app/dotenv
 *.parquet
 .terraform/
 **/.terraform.lock.hcl
+*.zip
+data/*
 # ---
 
 # Byte-compiled / optimized / DLL files
