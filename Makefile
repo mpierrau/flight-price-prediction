@@ -2,6 +2,15 @@ LOCAL_TAG:=$(shell date +"%Y-%m-%d-%H-%M")
 LOCAL_IMAGE_NAME:=flight-price-prediction:${LOCAL_TAG}
 SVC_API_PORT:=8080
 
+setup:
+	poetry lock --no-update
+	poetry install --with dev
+	pre-commit install
+
+get_data: setup
+	kaggle datasets download -d viveksharmar/flight-price-data -p data/
+	unzip -o data/flight-price-data.zip
+
 test:
 	pytest tests/
 
@@ -17,7 +26,7 @@ integration_test: build
 	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integration-tests/run.sh
 
 launch_app:
-	cd src/; \
+	cd src/ && \
 	fastapi run wsgi.py --app app
 
 predict:
@@ -25,8 +34,3 @@ predict:
 
 publish: build integration_test
 	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
-
-setup:
-	poetry lock --no-update
-	poetry install --with dev
-	pre-commit install
