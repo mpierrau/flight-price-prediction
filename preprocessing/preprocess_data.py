@@ -14,6 +14,8 @@ from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
 from sklearn.model_selection import train_test_split
 
+from training.feature_engineering import feature_engineering
+
 logger: logging.Logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
 
@@ -122,20 +124,6 @@ def create_test_train_split(
     return train_data, validation_data
 
 
-@click.command
-@click.argument(
-    "path",
-    type=click.Path(exists=True),
-)
-@click.option(
-    "--train-size",
-    type=float,
-    default=0.7,
-    help="Fraction of data to use as training data. \
-        Expected to be between 0 and 1. Test size will be 1-(train-size).",
-)
-@click.option("--random-seed", type=int, default=13371337, help="Random seed for test/train split.")
-@click.option("--savedir", type=Path, default="data", help="Directory where to save data to.")
 @flow(log_prints=True)
 def preprocess_data(
     path: Path,
@@ -191,6 +179,46 @@ def preprocess_data(
     save_dataset(train_data, savedir / f"train_data_{now}.parquet")
     save_dataset(validation_data, savedir / f"validation_data_{now}.parquet")
 
+    train_data_feats = feature_engineering(train_data.copy())
+
+    validation_data_feats = feature_engineering(validation_data.copy())
+
+    create_table_artifacts(
+        train_data_feats,
+        "train_with_features",
+        target_column,
+    )
+    create_table_artifacts(
+        validation_data_feats,
+        "validation_with_features",
+        target_column,
+    )
+
+    save_dataset(train_data_feats, savedir / f"train_data_{now}_with_features.parquet")
+    save_dataset(validation_data_feats, savedir / f"validation_data_{now}_with_features.parquet")
+
+
+@click.command
+@click.argument(
+    "path",
+    type=click.Path(exists=True),
+)
+@click.option(
+    "--train-size",
+    type=float,
+    default=0.7,
+    help="Fraction of data to use as training data. \
+        Expected to be between 0 and 1. Test size will be 1-(train-size).",
+)
+@click.option("--random-seed", type=int, default=13371337, help="Random seed for test/train split.")
+@click.option("--savedir", type=Path, default="data", help="Directory where to save data to.")
+def preprocess_data_wrapper(*args, **kwargs) -> None:
+    """
+    A wrapper to enable using both click and prefect decorators
+    at the same time
+    """
+    preprocess_data(*args, **kwargs)
+
 
 if __name__ == "__main__":
-    preprocess_data()
+    preprocess_data_wrapper()
