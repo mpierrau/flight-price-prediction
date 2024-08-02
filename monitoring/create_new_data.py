@@ -102,10 +102,10 @@ def get_source(allow_invalid: bool = False) -> str:
         "Mumbai",
     ]
     invalid_sources = [
-        "Stockholm",
+        "Harare",
         "Copenhagen",
         "Helsinki",
-        "Oslo",
+        "Vancouver",
         "New York",
         "Amsterdam",
         "Lima",
