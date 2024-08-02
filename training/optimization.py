@@ -19,45 +19,6 @@ EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 
-@click.command()
-@click.argument(
-    "train-data-path",
-    type=click.Path(exists=True),
-)
-@click.argument(
-    "val-data-path",
-    type=click.Path(exists=True),
-)
-@click.option(
-    "--model-name",
-    type=click.Choice(
-        choices=["LinearRegression", "Lasso", "Ridge", "RandomForestRegressor", "XGBRegressor"]
-    ),
-    help="Model name to train",
-)
-@click.option(
-    "--num-trials",
-    default=15,
-    help="The number of parameter evaluations for the optimizer to explore",
-)
-@click.option(
-    "--loss-key",
-    type=str,
-    default="rmse",
-    help="Which metric to use as loss for optimization.",
-)
-@click.option(
-    "--target-column",
-    type=str,
-    default="price",
-    help="Name of column to predict",
-)
-@click.option(
-    "--seed",
-    type=int,
-    default=13371337,
-    help="Random seed for reproducibility",
-)
 @flow
 def run_optimization(
     train_data_path: Path,
@@ -133,5 +94,50 @@ def run_optimization(
     )
 
 
+@click.command()
+@click.argument(
+    "train-data-path",
+    type=click.Path(exists=True),
+)
+@click.argument(
+    "val-data-path",
+    type=click.Path(exists=True),
+)
+@click.option(
+    "--model-name",
+    type=click.Choice(
+        choices=["LinearRegression", "Lasso", "Ridge", "RandomForestRegressor", "XGBRegressor"]
+    ),
+    help="Model name to train",
+)
+@click.option(
+    "--num-trials",
+    default=15,
+    help="The number of parameter evaluations for the optimizer to explore",
+)
+@click.option(
+    "--loss-key",
+    type=str,
+    default="rmse",
+    help="Which metric to use as loss for optimization.",
+)
+@click.option(
+    "--target-column",
+    type=str,
+    default="price",
+    help="Name of column to predict",
+)
+@click.option(
+    "--seed",
+    type=int,
+    default=13371337,
+    help="Random seed for reproducibility",
+)
+def run_optimization_wrapper(*args, **kwargs) -> None:
+    """A wrapper around the function to enable
+    prefect and click decorators"""
+    run_optimization(*args, **kwargs)
+
+
 if __name__ == "__main__":
-    run_optimization()
+    run_optimization_wrapper()
