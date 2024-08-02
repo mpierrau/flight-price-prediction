@@ -7,6 +7,7 @@ app/dotenv
 **/.terraform.lock.hcl
 *.zip
 data/*
+*.html
 # ---
 
 # Byte-compiled / optimized / DLL files
