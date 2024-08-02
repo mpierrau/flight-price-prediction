@@ -164,11 +164,9 @@ def get_func_n(func: Callable, n: int, *args, **kwargs) -> list[Any]:
     return [func(*args, **kwargs) for _ in range(n)]
 
 
-@click.command
-@click.option("-n", "--n-samples", type=int, default=2)
-@click.option("-invalid", "--allow-invalid-data", is_flag=True)
-@click.option("-s", "--random_seed", type=int, default=None)
-def create_random_new_data(n_samples: int, allow_invalid_data: bool, random_seed: int) -> None:
+def create_random_new_data(
+    n_samples: int, allow_invalid_data: bool, random_seed: int
+) -> pd.DataFrame:
     """
     Create new synthetic data that we can
     give to the monitoring service.
@@ -199,9 +197,19 @@ def create_random_new_data(n_samples: int, allow_invalid_data: bool, random_seed
     }
 
     df = pd.DataFrame(data)
-    feats = feature_engineering(df)
-    print(feats)
+    feats = feature_engineering(df.copy())
+
+    return feats
+
+
+@click.command()
+@click.option("-n", "--n-samples", type=int, default=2)
+@click.option("-invalid", "--allow-invalid-data", is_flag=True)
+@click.option("-s", "--random_seed", type=int, default=None)
+def create_random_new_data_wrapper(*args, **kwargs):
+    """Arg wrapper function"""
+    create_random_new_data(*args, **kwargs)
 
 
 if __name__ == '__main__':
-    create_random_new_data()
+    create_random_new_data_wrapper()
