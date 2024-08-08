@@ -2,8 +2,8 @@
 name = "mlflow-server"
 version = "0.0.1"
 description = "MLFlow server app"
-authors = ["Magnus Pierrau <magnus.pierrau@algodx.com>"]
-maintainers = ["Magnus Pierrau <magnus.pierrau@algodx.com>"]
+authors = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
+maintainers = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
 readme = "README.md"
 package-mode = false
 

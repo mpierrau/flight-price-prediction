@@ -2,8 +2,8 @@
 name = "flight-price-prediction"
 version = "0.0.1"
 description = "Final Project for DataTalksClub MLOps Zoomcamp 2024 Cohort"
-authors = ["Magnus Pierrau <magnus.pierrau@algodx.com>"]
-maintainers = ["Magnus Pierrau <magnus.pierrau@algodx.com>"]
+authors = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
+maintainers = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/mpierrau/flight-price-prediction"
 package-mode = false
