@@ -8,7 +8,7 @@ terraform {
   backend "s3" {
     bucket = "mpierrau-tf-state-flight-price-prediction"
     key = "flight-price-prediction-mlflow.tfstate"
-    region = "us-east-1"
+    region = var.aws_region
     encrypt = true
   }
   required_version = ">= 1.8"
