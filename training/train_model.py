@@ -18,7 +18,7 @@ from sklearn.feature_extraction import DictVectorizer
 from training.utils import calculate_metrics
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
-EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
+MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 

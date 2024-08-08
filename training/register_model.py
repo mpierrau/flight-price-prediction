@@ -19,7 +19,7 @@ from mlflow.tracking import MlflowClient
 from training.utils import prepare_data, setup_experiment, get_model_and_params
 from training.train_model import train_and_evaluate
 
-EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
+MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
@@ -97,7 +97,7 @@ def run_register_model(
     client = MlflowClient(tracking_uri=mlflow_tracking_uri or MLFLOW_TRACKING_URI)
 
     # Retrieve the top_n model runs and log the models
-    experiment = client.get_experiment_by_name(exp_name or EXPERIMENT_NAME)
+    experiment = client.get_experiment_by_name(exp_name or MLFLOW_EXPERIMENT_NAME)
     if not experiment:
         runs = []
     else:
@@ -111,7 +111,7 @@ def run_register_model(
         "train-data-path": train_data_path,
         "val-data-path": val_data_path,
     }
-    new_exp_name = EXPERIMENT_NAME + "_best_runs"
+    new_exp_name = MLFLOW_EXPERIMENT_NAME + "_best_runs"
     client, exp_id = setup_experiment(
         experiment_name=new_exp_name,
         tracking_uri=MLFLOW_TRACKING_URI,
@@ -155,7 +155,7 @@ def run_register_model(
     # Register the best model
     mlflow.register_model(
         model_uri=f"runs:/{best_run.info.run_id}/model",
-        name=f"{EXPERIMENT_NAME}-best-model",
+        name=f"{MLFLOW_EXPERIMENT_NAME}-best-model",
     )
 
 

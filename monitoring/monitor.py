@@ -3,6 +3,7 @@ Code for generating an EvidentlyAI report on
 performance and data drift
 """
 
+import os
 import sys
 import pathlib
 from pathlib import Path
@@ -22,8 +23,9 @@ from evidently.metric_preset import RegressionPreset
 from training.utils import prepare_data
 from monitoring.create_new_data import create_random_new_data
 
-MLFLOW_MODEL_URI = (
-    "s3://mlflow-models-magnus-dev/5/02ab125dbc784fd19d21159287170fa0/artifacts/model/"
+MLFLOW_MODEL_URI = os.getenv(
+    key="MLFLOW_MODEL_URI",
+    default="s3://mlflow-models-magnus-dev/5/02ab125dbc784fd19d21159287170fa0/artifacts/model/",
 )
 
 

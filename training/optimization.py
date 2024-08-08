@@ -15,7 +15,7 @@ from training.utils import prepare_data, setup_experiment, get_model_and_params
 from training.train_model import train_and_evaluate
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
-EXPERIMENT_NAME = os.getenv("EXPERIMENT_NAME", "flight-price-prediction")
+MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 
 
@@ -47,7 +47,7 @@ def run_optimization(
         seed (int): Random seed for reproducibility
     """
     _, exp_id = setup_experiment(
-        experiment_name=EXPERIMENT_NAME,
+        experiment_name=MLFLOW_EXPERIMENT_NAME,
         tracking_uri=MLFLOW_TRACKING_URI,
     )
     # Load data
