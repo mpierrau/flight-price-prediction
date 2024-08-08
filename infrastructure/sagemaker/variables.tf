@@ -18,11 +18,6 @@ variable "ec2_instance_type" {
   type = string
 }
 
-variable "model_bucket_name" {
-  description = "Name of S3 bucket with model artifacts"
-  type = string
-}
-
 variable "model_id" {
   description = "MLFlow model ID, {Experiment ID}/{Run ID}"
   type = string
