@@ -8,6 +8,7 @@ app/dotenv
 *.zip
 data/*
 *.html
+*.tfvar
 # ---
 
 # Byte-compiled / optimized / DLL files
