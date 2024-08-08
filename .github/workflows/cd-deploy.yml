@@ -34,7 +34,7 @@ jobs:
         id: tf-plan
         working-directory: "infrastructure/"
         run: |
-          terraform init -backend-config="key=flight-price-prediction-prod.tfstate" --reconfigure && terraform plan --var-file vars/production.tfvars
+          terraform init -backend-config="key=flight-price-prediction-prod.tfstate" --reconfigure && terraform plan --var-file vars/prod.tfvars
           echo "ecr_repo=$(terraform output ecr_repo | xargs)" >> $GITHUB_OUTPUT
 
         # Build and push to ECR
@@ -59,6 +59,6 @@ jobs:
         working-directory: "infrastructure/"
         if: ${{ steps.tf-plan.outcome }} == 'success'
         run: |
-          terraform apply  -auto-approve --var-file vars/production.tfvars
+          terraform apply  -auto-approve --var-file vars/prod.tfvars
           echo "ecr_repo=$(terraform output ecr_repo | xargs)" >> $GITHUB_OUTPUT
           echo "endpoint_name=$(terraform output endpoint_name | xargs)" >> $GITHUB_OUTPUT
