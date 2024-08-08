@@ -18,14 +18,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_ecr_repository" "model_repo" {
-  name = "${var.model_ecr_image}"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = false
-  }
-}
+data "aws_caller_identity" "current_identity" {}
 
 # SSM parameter setup by mlflow infra
 data "aws_ssm_parameter" "mlflow_bucket_url" {
@@ -33,7 +26,17 @@ data "aws_ssm_parameter" "mlflow_bucket_url" {
 }
 
 locals {
+  full_ecr_image = "${data.aws_caller_identity.current_identity.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.model_ecr_image}"
   mlflow_model_uri = "${data.aws_ssm_parameter.mlflow_bucket_url.value}/${var.model_id}/artifacts/model/"
+}
+
+resource "aws_ecr_repository" "model_repo" {
+  name = local.full_ecr_image
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
 }
 
 resource "aws_sagemaker_model" "sagemaker_model" {

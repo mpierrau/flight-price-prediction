@@ -1,0 +1,5 @@
+model_ecr_image = "flight-price-prediction_mlops-zoomcamp-stg"
+ecr_image_tag = "latest"
+ec2_instance_type = "ml.m5.large"
+model_id = "5/d1f695107a864442a75b53638eef080f"
+env = "prod"
