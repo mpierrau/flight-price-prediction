@@ -7,6 +7,7 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 
 import os
 import sys
+import logging
 from pathlib import Path
 
 import tqdm
@@ -22,6 +23,9 @@ from training.train_model import train_and_evaluate
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 @click.command()
@@ -91,11 +95,18 @@ def run_register_model(
         target_column (str): which column to use as target
         seed (int): random seed for reproducibility
     """
+    logger.info("Preparing data")
     train_data = prepare_data(train_data_path, target_column)
     val_data = prepare_data(val_data_path, target_column)
 
+    logger.info(
+        "Starting MlflowClient with tracking uri %s", mlflow_tracking_uri or MLFLOW_TRACKING_URI
+    )
     client = MlflowClient(tracking_uri=mlflow_tracking_uri or MLFLOW_TRACKING_URI)
 
+    logger.info(
+        "Getting top %s runs from experiment %s", top_n, (exp_name or MLFLOW_EXPERIMENT_NAME)
+    )
     # Retrieve the top_n model runs and log the models
     experiment = client.get_experiment_by_name(exp_name or MLFLOW_EXPERIMENT_NAME)
     if not experiment:
@@ -107,6 +118,7 @@ def run_register_model(
             max_results=top_n,
             order_by=["metrics.rmse ASC"],
         )
+    logger.info("Found %s runs", len(runs))
     pars_to_log: dict[str, Path | int] = {
         "train-data-path": train_data_path,
         "val-data-path": val_data_path,
@@ -116,6 +128,7 @@ def run_register_model(
         experiment_name=new_exp_name,
         tracking_uri=MLFLOW_TRACKING_URI,
     )
+    logger.info("Starting experiment runs")
     for run in tqdm.tqdm(runs):
         model_class, static_pars, search_space = get_model_and_params(run.data.tags['model_name'])
         model_pars = {k: v for k, v in run.data.params.items() if k in search_space}
@@ -138,7 +151,7 @@ def run_register_model(
             pars_to_log=pars_to_log,
             log_model=True,
         )
-
+    logger.info("Finding best run")
     # Select the model with the lowest test RMSE
     experiment = client.get_experiment_by_name(name=new_exp_name)
     if not experiment:
@@ -152,11 +165,13 @@ def run_register_model(
         order_by=["metrics.rmse ASC"],
     )[0]
 
+    logger.info("Registering model to registry")
     # Register the best model
     mlflow.register_model(
         model_uri=f"runs:/{best_run.info.run_id}/model",
         name=f"{MLFLOW_EXPERIMENT_NAME}-best-model",
     )
+    logger.info("Done, model id: %s", f"{best_run.info.experiment_id}/{best_run.info.run_id}")
 
 
 if __name__ == "__main__":
