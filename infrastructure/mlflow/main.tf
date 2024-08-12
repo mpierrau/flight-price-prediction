@@ -6,9 +6,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "mpierrau-tf-state-flight-price-prediction"
+    bucket = "tf-state-flight-price-prediction-mpierrau"
     key = "flight-price-prediction-mlflow.tfstate"
-    region = "us-east-1"
+    region = "eu-north-1"
     encrypt = true
   }
   required_version = ">= 1.8"
