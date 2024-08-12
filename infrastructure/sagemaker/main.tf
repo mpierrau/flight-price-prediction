@@ -26,12 +26,12 @@ data "aws_ssm_parameter" "mlflow_bucket_url" {
 }
 
 locals {
-  full_ecr_image = "${data.aws_caller_identity.current_identity.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.model_ecr_image}"
+  ecr_image = "${var.model_ecr_image_prefix}-${var.project_id}-${var.env}"
   mlflow_model_uri = "${data.aws_ssm_parameter.mlflow_bucket_url.value}/${var.model_id}/artifacts/model/"
 }
 
 resource "aws_ecr_repository" "model_repo" {
-  name = local.full_ecr_image
+  name = local.ecr_image
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -39,35 +39,26 @@ resource "aws_ecr_repository" "model_repo" {
   }
 }
 
-resource "aws_sagemaker_model" "sagemaker_model" {
-  name = "${var.model_name}-model-${var.env}"
+# Sets up all model endpoint resources
+module "model" {
+  source = "./modules/model"
+  model_suffix = "${var.project_id}-${var.env}"
+  model_image_url = "${aws_ecr_repository.model_repo.repository_url}:${var.ecr_image_tag}"
+  mlflow_model_uri = local.mlflow_model_uri
   execution_role_arn = aws_iam_role.sagemaker_role.arn
-  primary_container {
-    image = "${aws_ecr_repository.model_repo.name}:${var.ecr_image_tag}"
-    mode = "SingleModel"
-    environment = tomap(
-      {
-        MLFLOW_MODEL_URI = local.mlflow_model_uri
-      }
-    )
-    image_config {
-      repository_access_mode = "Platform"
-    }
-  }
+  ec2_instance_type = var.ec2_instance_type
+  endpoint_variant_name = "variant-1"
 }
 
-resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config" {
-  name = "${var.model_name}-endpoint-config-${var.env}"
-  production_variants {
-    variant_name = "variant-1"
-    model_name = aws_sagemaker_model.sagemaker_model.name
-    initial_instance_count = 1
-    instance_type = var.ec2_instance_type
-    initial_variant_weight = 1.0
-  }
+# SNS topic for sending alarm notifications by email/sms
+resource "aws_sns_topic" "alarm_sns_topic" {
+  name = "sagemaker_endpoint_alarms"
+  display_name = "Sagemaker Alarm"
 }
 
-resource "aws_sagemaker_endpoint" "sagemaker_endpoint" {
-  name = "${var.model_name}-endpoint-${var.env}"
-  endpoint_config_name = aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config.name
+module "alarms" {
+  source = "./modules/alarms"
+  endpoint_name = module.model.sagemaker_endpoint_name
+  variant_name = module.model.sagemaker_variant_name
+  sns_topic_arn = aws_sns_topic.alarm_sns_topic.arn
 }

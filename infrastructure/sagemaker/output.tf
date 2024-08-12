@@ -1,7 +1,7 @@
 output "name" {
-  value = aws_sagemaker_endpoint.sagemaker_endpoint.name
+  value = module.model.sagemaker_endpoint_name
 }
 
 output "arn" {
-  value = aws_sagemaker_endpoint.sagemaker_endpoint.arn
+  value = module.model.sagemaker_endpoint_arn
 }

@@ -1,16 +1,20 @@
 variable "aws_region" {
-    description = "AWS region to create resources"
-    default = "eu-north-1"
+  description = "AWS region to create resources"
+  type = string
 }
 
-variable "model_ecr_image" {
+variable "project_id" {
+  description = "Identifier prefix for project resources"
   type = string
+}
+variable "model_ecr_image_prefix" {
   description = "URI to ECR holding model image to serve"
+  type = string
 }
 
 variable "ecr_image_tag" {
-  type = string
   description = "ECR image tag to use"
+  type = string
 }
 
 variable "ec2_instance_type" {
@@ -21,12 +25,6 @@ variable "ec2_instance_type" {
 variable "model_id" {
   description = "MLFlow model ID, {Experiment ID}/{Run ID}"
   type = string
-}
-
-variable "model_name" {
-  description = "Name of the Sagemaker model and related resources."
-  type = string
-  default = "flight-price-prediction"
 }
 
 variable "env" {
