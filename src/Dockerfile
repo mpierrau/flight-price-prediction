@@ -20,9 +20,9 @@ COPY [ "pyproject.toml", "poetry.lock", "./" ]
 
 RUN poetry config virtualenvs.create false
 RUN poetry lock --no-update
-RUN poetry install --without dev
+RUN poetry install
 
-COPY ./src .
+COPY ./ .
 
 EXPOSE 8080
 
