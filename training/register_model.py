@@ -23,54 +23,12 @@ from training.train_model import train_and_evaluate
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
+REF_DATA_BUCKET = os.getenv("REF_DATA_BUCKET", None)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-@click.command()
-@click.argument(
-    "train-data-path",
-    type=click.Path(exists=True),
-)
-@click.argument(
-    "val-data-path",
-    type=click.Path(exists=True),
-)
-@click.option(
-    "-n",
-    "--top_n",
-    default=5,
-    type=int,
-    help="Number of top models that need to be evaluated to decide which one to promote",
-)
-@click.option(
-    "-e",
-    "--exp-name",
-    type=str,
-    default="flight-price-prediction",
-    help="Name of MLFlow experiment",
-)
-@click.option(
-    "-uri",
-    "--mlflow-tracking-uri",
-    type=str,
-    help="MLFlow tracking URI",
-)
-@click.option(
-    "-t",
-    "--target-column",
-    type=str,
-    default="price",
-    help="Name of column to predict",
-)
-@click.option(
-    "-s",
-    "--seed",
-    type=int,
-    default=13371337,
-    help="Random seed for reproducibility",
-)
 @flow
 def run_register_model(
     train_data_path: Path,
@@ -150,6 +108,7 @@ def run_register_model(
             experiment_id=exp_id,
             pars_to_log=pars_to_log,
             log_model=True,
+            data_upload_uri=REF_DATA_BUCKET,
         )
     logger.info("Finding best run")
     # Select the model with the lowest test RMSE
@@ -174,5 +133,53 @@ def run_register_model(
     logger.info("Done, model id: %s", f"{best_run.info.experiment_id}/{best_run.info.run_id}")
 
 
+@click.command()
+@click.argument(
+    "train-data-path",
+    type=click.Path(exists=True),
+)
+@click.argument(
+    "val-data-path",
+    type=click.Path(exists=True),
+)
+@click.option(
+    "-n",
+    "--top_n",
+    default=5,
+    type=int,
+    help="Number of top models that need to be evaluated to decide which one to promote",
+)
+@click.option(
+    "-e",
+    "--exp-name",
+    type=str,
+    default="flight-price-prediction",
+    help="Name of MLFlow experiment",
+)
+@click.option(
+    "-uri",
+    "--mlflow-tracking-uri",
+    type=str,
+    help="MLFlow tracking URI",
+)
+@click.option(
+    "-t",
+    "--target-column",
+    type=str,
+    default="price",
+    help="Name of column to predict",
+)
+@click.option(
+    "-s",
+    "--seed",
+    type=int,
+    default=13371337,
+    help="Random seed for reproducibility",
+)
+def run_register_model_wrapper(*args, **kwargs) -> None:
+    """Wrapper function for click args and prefect"""
+    run_register_model(*args, **kwargs)
+
+
 if __name__ == "__main__":
-    run_register_model()
+    run_register_model_wrapper()

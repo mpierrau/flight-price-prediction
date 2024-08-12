@@ -80,6 +80,7 @@ def run_optimization(
             experiment_id=exp_id,
             pars_to_log=pars_to_log,
             log_model=False,
+            data_upload_uri=None,
         )
         return {"loss": metric_dict[loss_key], "status": STATUS_OK}
 
