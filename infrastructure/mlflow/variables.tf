@@ -58,6 +58,7 @@ variable "internet_cidr" {
   description = "Cidr block for the internet"
 }
 
+# Never use 0.0.0.0/0 in production
 variable "your_vpn" {
   default = "0.0.0.0/0"
   description = "Change this variable to your VPN. If you leave 0.0.0.0/0 your application will be accessible from any IP."

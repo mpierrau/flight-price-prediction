@@ -53,7 +53,7 @@ variable "private_subnet_b_id" {
   description = "ID of private subnet b"
 }
 
-variable "mlflow_ecr_repo_url" {
+variable "mlflow_ecr_image_url" {
   type = string
-  description = "ECR repository holding mlflow container"
+  description = "ECR image for mlflow container"
 }

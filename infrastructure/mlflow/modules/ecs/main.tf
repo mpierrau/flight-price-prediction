@@ -24,7 +24,7 @@ resource "aws_ecs_task_definition" "mlflow" {
           },
         ]
         essential = true
-        image     = var.mlflow_ecr_repo_url
+        image     = var.mlflow_ecr_image_url
         logConfiguration = {
           logDriver = "awslogs"
           options = {
@@ -130,18 +130,18 @@ resource "aws_ecs_service" "mlflow" {
   load_balancer {
     container_name   = var.ecs_task_name
     container_port   = 8080
-    target_group_arn = var.lb_target_group_arn #aws_lb_target_group.mlflow.arn
+    target_group_arn = var.lb_target_group_arn
   }
 
   network_configuration {
     security_groups = [
-      var.ecs_sg_id,#aws_security_group.ecs_sg.id,
-      var.rds_sg_id#aws_security_group.rds_sg.id,
+      var.ecs_sg_id,
+      var.rds_sg_id
     ]
 
     subnets = [
-      var.private_subnet_a_id, #aws_subnet.private_subnet_a.id,
-      var.private_subnet_b_id #aws_subnet.private_subnet_b.id,
+      var.private_subnet_a_id,
+      var.private_subnet_b_id
     ]
   }
 }

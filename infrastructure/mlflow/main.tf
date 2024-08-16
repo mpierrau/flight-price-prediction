@@ -41,6 +41,9 @@ module "ecr" {
   source = "./modules/ecr"
   app_name = var.app_name
   env = var.env
+  region = var.aws_region
+  ecr_image_tag = "latest"
+  src_dir = "src"
 }
 
 # Network settings for security and connectivity
@@ -93,7 +96,7 @@ module "ecs" {
   rds_sg_id = module.network.security_group_rds.id
   private_subnet_a_id = module.network.private_subnet_a_id
   private_subnet_b_id = module.network.private_subnet_b_id
-  mlflow_ecr_repo_url = module.ecr.mlflow_ecr_repo_url
+  mlflow_ecr_image_url = module.ecr.mlflow_ecr_image_url
 
   # Need to wait for LB and DB URL in SSM to be ready
   depends_on = [

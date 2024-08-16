@@ -1,3 +1,3 @@
-output "mlflow_ecr_repo_url" {
-  value = aws_ecr_repository.mlflow_ecr.repository_url
+output "mlflow_ecr_image_url" {
+  value = data.aws_ecr_image.mlflow_image.image_uri
 }
