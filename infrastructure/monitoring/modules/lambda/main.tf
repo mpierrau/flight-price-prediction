@@ -12,8 +12,6 @@ resource "aws_lambda_function" "monitoring_lambda" {
     variables = {
       MLFLOW_RUN_ID=var.mlflow_run_id
       MLFLOW_MODEL_BUCKET=var.mlflow_model_bucket,
-      MLFLOW_TRACKING_URI=var.mlflow_tracking_uri
-      MLFLOW_ARTIFACT_PATH=var.mlflow_artifact_path
       MONITORING_DATA_BUCKET=var.monitoring_data_bucket
       MONITORING_TEST_DATA_FILE=null # We generate synthetic data
       MONITORING_REFERENCE_DATA_FILE=var.reference_data_path
@@ -24,7 +22,7 @@ resource "aws_lambda_function" "monitoring_lambda" {
   ephemeral_storage {
     size = 2048
   }
-  memory_size = 512
+  memory_size = 1024
 }
 
 locals {

@@ -43,16 +43,6 @@ variable "mlflow_run_id" {
   type = string
 }
 
-variable "mlflow_tracking_uri" {
-  description = "Tracking URI to mlflow server"
-  type = string
-}
-
-variable "mlflow_artifact_path" {
-  description = "Relative path to model artifacts in bucket"
-  type = string
-}
-
 variable "reference_data_path" {
   description = "Relative path in bucket to reference data"
   type = string

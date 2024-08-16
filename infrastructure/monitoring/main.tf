@@ -45,9 +45,7 @@ module "lambda_function" {
   report_bucket = aws_s3_bucket.report_bucket.bucket
   lambda_function_name = "${var.lambda_function_name}-${var.project_id}-${var.env}"
   image_uri = "${module.ecr_image.image_uri}"
-  mlflow_tracking_uri = var.mlflow_tracking_uri
   mlflow_run_id = var.mlflow_run_id
-  mlflow_artifact_path = var.mlflow_artifact_path
   monitoring_data_bucket = aws_s3_bucket.data_bucket.bucket
   reference_data_path = var.reference_data_path
   mlflow_model_bucket = var.mlflow_model_bucket
