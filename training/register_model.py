@@ -7,13 +7,12 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 
 import os
 import sys
-import logging
 from pathlib import Path
 
 import tqdm
 import click
 import mlflow
-from prefect import flow
+from prefect import flow, get_run_logger
 from mlflow.entities import Run, ViewType
 from mlflow.tracking import MlflowClient
 
@@ -24,9 +23,6 @@ MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-predi
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
 REF_DATA_BUCKET = os.getenv("REF_DATA_BUCKET", None)
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 @flow
@@ -53,6 +49,8 @@ def run_register_model(
         target_column (str): which column to use as target
         seed (int): random seed for reproducibility
     """
+    logger = get_run_logger()
+
     logger.info("Preparing data")
     train_data = prepare_data(train_data_path, target_column)
     val_data = prepare_data(val_data_path, target_column)
@@ -130,7 +128,9 @@ def run_register_model(
         model_uri=f"runs:/{best_run.info.run_id}/model",
         name=f"{MLFLOW_EXPERIMENT_NAME}-best-model",
     )
-    logger.info("Done, model id: %s", f"{best_run.info.experiment_id}/{best_run.info.run_id}")
+    logger.info(
+        "Done!\nModel ID: %s\nExperiment ID: %s", best_run.info.experiment_id, best_run.info.run_id
+    )
 
 
 @click.command()
@@ -145,7 +145,7 @@ def run_register_model(
 @click.option(
     "-n",
     "--top_n",
-    default=5,
+    default=3,
     type=int,
     help="Number of top models that need to be evaluated to decide which one to promote",
 )
