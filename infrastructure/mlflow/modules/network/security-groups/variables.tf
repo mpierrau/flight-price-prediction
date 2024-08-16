@@ -19,6 +19,6 @@ variable "internet_cidr" {
 }
 
 variable "env" {
-  description = "value"
+  description = "Environment tag"
   type = string
 }

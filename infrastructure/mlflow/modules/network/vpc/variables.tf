@@ -49,6 +49,6 @@ variable "zone_b" {
 }
 
 variable "env" {
-  description = "value"
+  description = "Environment tag"
   type = string
 }

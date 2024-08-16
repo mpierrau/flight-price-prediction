@@ -60,6 +60,6 @@ variable "your_vpn" {
 }
 
 variable "env" {
-  description = "value"
+  description = "Environment tag"
   type = string
 }

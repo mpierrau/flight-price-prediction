@@ -75,17 +75,17 @@ variable "zone_b" {
 # RDS variables
 variable "db_allocated_storage" {
   type = string
-  description = "value"
+  description = "GB of storage for database"
 }
 variable "db_engine" {
   type = string
-  description = "value"
+  description = "Which DB engine/backend to use"
 }
 variable "db_engine_version" {
   type = string
-  description = "value"
+  description = "Which version of the DB engine/backend to use"
 }
 variable "db_instance_class" {
   type = string
-  description = "value"
+  description = "EC2 instance to use for hosting DB"
 }

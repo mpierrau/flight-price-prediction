@@ -34,6 +34,6 @@ variable "db_instance_class" {
 }
 
 variable "env" {
-  description = "value"
+  description = "Environment tag"
   type = string
 }
