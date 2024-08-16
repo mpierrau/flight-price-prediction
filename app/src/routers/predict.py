@@ -48,6 +48,7 @@ class Handler:
         Raises:
             e: MlflowException
         """
+        self.logger.info("Loading mlflow model")
         try:
             self.model = mlflow.pyfunc.load_model(mlflow_model_uri)
         except mlflow.MlflowException as e:

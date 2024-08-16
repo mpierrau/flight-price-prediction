@@ -16,16 +16,15 @@ RUN pip install poetry
 ENV PATH="/opt/app:${PATH}"
 ENV PYTHONPATH=.
 
-COPY [ "pyproject.toml", "poetry.lock", "./" ]
+COPY [ "pyproject.toml", "poetry.lock", "nginx.conf", "./" ]
 
 RUN poetry config virtualenvs.create false
 RUN poetry lock --no-update
 RUN poetry install
 
-COPY ./ .
+COPY ./src .
 
 EXPOSE 8080
 
-#RUN /bin/bash
 RUN chmod +x serve
 ENTRYPOINT ["serve"]

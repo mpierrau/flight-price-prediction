@@ -6,9 +6,8 @@ import asyncio
 import logging
 
 import uvicorn
-from fastapi import FastAPI
-
 from config import AppSettings
+from fastapi import FastAPI
 from routers import predict, internal
 
 
@@ -43,7 +42,7 @@ class FlightPricePredictionApp(FastAPI):
         """
         self.logger.info("Got a Signal. Shutting down.")
 
-    async def run(self) -> None:
+    def run(self) -> None:
         """
         Method for serving the app
         """
@@ -51,8 +50,8 @@ class FlightPricePredictionApp(FastAPI):
             app=self,
             host="0.0.0.0",
             port=self.settings.svc_api_port,
-            log_level="info",
-            access_log=False,
+            log_level="debug",
+            access_log=True,
         )
         server = uvicorn.Server(config)
         t1 = server.serve()
@@ -60,4 +59,4 @@ class FlightPricePredictionApp(FastAPI):
         self.logger.info(f"Starting service on port {self.settings.svc_api_port}")
 
         # Wait until all tasks have finished
-        await asyncio.gather(t1)
+        asyncio.gather(t1)
