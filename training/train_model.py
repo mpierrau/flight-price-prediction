@@ -23,7 +23,7 @@ from training.utils import calculate_metrics
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_URI", "")
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "flight-price-prediction")
-DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", "magnus")
+DEVELOPER_NAME = os.getenv("DEVELOPER_NAME", None)
 NOW = datetime.datetime.now().strftime(format="%Y%m%d_%H%M%S")
 
 
