@@ -4,7 +4,6 @@ Kaggle Flight Price Prediction Dataset.
 Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
-import logging
 import datetime
 from pathlib import Path
 
@@ -15,9 +14,6 @@ from prefect.artifacts import create_markdown_artifact
 from sklearn.model_selection import train_test_split
 
 from training.feature_engineering import feature_engineering
-
-logger: logging.Logger = logging.getLogger()
-logger.setLevel(level=logging.INFO)
 
 
 @task
