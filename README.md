@@ -67,7 +67,6 @@ First we do some local hyperparameter tuning on the data. Default is 50 runs, wh
 make train_model_hyperpar_search
 ```
 Then we locally train and register the 3 best models. The models that are saved are actually pipelines which performs feature engineering and feature selection before the inference step. These all get their artifacts uploaded to S3 via MLFlow. We also upload training script and feature engineering for tracability.
-
 ```sh
 make register_model
 ```
@@ -83,15 +82,16 @@ make get_mlflow_info
 Go to the returned DNS adress in a browser and enter the username and password (these were automatically generated during the build process and are stored in AWS SSM).
 
 ## Serving
-Serve the model via Sagemaker and build related Cloudwatch alarms
+Serve the model via an Sagemaker Endpoint and build related Cloudwatch alarms and an SNS topic (which is easily subscribable by email or mobile phone):
 ```sh
 make build_sagemaker_infra
 ```
 
 ## Monitoring
-Builds an AWS Lambda function which creates an EvidentlyAI report
-once daily and uploads it to an S3 bucket. The link to the S3 bucket
-is outputted as `report_bucket` once this command has successfully completed.
+Builds an AWS Lambda function which creates an EvidentlyAI report once daily and uploads it to an S3 bucket.
+The link to the S3 bucket is outputted as `report_bucket` once this command has successfully completed.
+
+Here, again you are required to update `mlflow_run_id` in `infrastructure/monitoring/vars/prod.tfvars` to the new `'{exp_id}/{run_id}'` from the training step, before running:
 ```sh
 make build_monitoring_infra
 ```

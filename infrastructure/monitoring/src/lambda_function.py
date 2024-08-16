@@ -23,7 +23,7 @@ MLFLOW_MODEL_BUCKET = os.getenv('MLFLOW_MODEL_BUCKET')
 
 MONITORING_DATA_BUCKET = os.getenv('MONITORING_DATA_BUCKET')
 MONITORING_TEST_DATA_FILE = os.getenv('MONITORING_TEST_DATA_FILE', None)
-MONITORING_REFERENCE_DATA_FILE = os.getenv('MONITORING_REFERENCE_DATA_FILE')
+MONITORING_REFERENCE_DATA_FILE = os.getenv('MONITORING_REFERENCE_DATA_FILE', None)
 MONITORING_REPORT_BUCKET = os.getenv('MONITORING_REPORT_BUCKET')
 
 logger = logging.getLogger()
@@ -39,10 +39,14 @@ monitoring_svc = MonitoringSvc(
     report_bucket_uri=MONITORING_REPORT_BUCKET,
 )
 
+reference_data_path = (
+    MONITORING_REFERENCE_DATA_FILE or f"reference_data/train_data_{exp_id}_{run_id}.parquet"
+)
+
 monitoring_svc.download_data(
     data_bucket=MONITORING_DATA_BUCKET,
     test_data_file=MONITORING_TEST_DATA_FILE,
-    reference_data_file=MONITORING_REFERENCE_DATA_FILE,
+    reference_data_file=reference_data_path,
 )
 
 

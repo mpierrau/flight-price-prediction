@@ -13,8 +13,6 @@ resource "aws_lambda_function" "monitoring_lambda" {
       MLFLOW_RUN_ID=var.mlflow_run_id
       MLFLOW_MODEL_BUCKET=var.mlflow_model_bucket,
       MONITORING_DATA_BUCKET=var.monitoring_data_bucket
-      MONITORING_TEST_DATA_FILE=null # We generate synthetic data
-      MONITORING_REFERENCE_DATA_FILE=var.reference_data_path
       MONITORING_REPORT_BUCKET=var.report_bucket
     }
   }

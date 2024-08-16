@@ -101,7 +101,8 @@ def train_and_evaluate(
         model_instance,
     )
 
-    with mlflow.start_run(experiment_id=experiment_id):
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_id = run.info.run_id
         mlflow.set_tag("developer", DEVELOPER_NAME)
         mlflow.set_tag("model_name", model_instance.__class__.__name__)
         mlflow.log_params(pars_to_log)
@@ -119,7 +120,7 @@ def train_and_evaluate(
             log_and_upload_data(
                 data_upload_uri=data_upload_uri,
                 train_data=full_data,
-                dataset_filename=f"train_data_{experiment_id}_{NOW}.parquet",
+                dataset_filename=f"train_data_{experiment_id}_{run_id}.parquet",
             )
 
         if log_model:

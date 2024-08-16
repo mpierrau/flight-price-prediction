@@ -43,11 +43,6 @@ variable "mlflow_run_id" {
   type = string
 }
 
-variable "reference_data_path" {
-  description = "Relative path in bucket to reference data"
-  type = string
-}
-
 variable "src_dir" {
   description = "Directory with source code. Used to monitor for changes."
   type = string

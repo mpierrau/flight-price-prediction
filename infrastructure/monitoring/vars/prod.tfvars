@@ -6,8 +6,8 @@ reference_data_bucket_name = "data"
 ecr_repo_name = "monitoring-lambda"
 ecr_image_tag = "latest"
 lambda_function_name = "monitoring_lambda"
-
-mlflow_run_id = "1/151686b8d2a9438ca32b5def5c8d9df7"
-reference_data_path = "reference_data/train_data_20240812_104605.parquet"
 src_dir = "src/"
 mlflow_model_bucket = "artifact-bucket-mlflow-tf-prod"
+
+# Update me!
+mlflow_run_id = "2/40955e4338c14174aa6311cd9c5252fe"

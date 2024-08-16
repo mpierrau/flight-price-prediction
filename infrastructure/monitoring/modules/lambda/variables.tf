@@ -27,8 +27,3 @@ variable "monitoring_data_bucket" {
   description = "Bucket name where test and reference data is stored"
   type = string
 }
-
-variable "reference_data_path" {
-  description = "Relative path in bucket to reference data"
-  type = string
-}
