@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "mlflow-bucket" {
-  bucket = "mlflow-bucket-${var.app_name}-${var.env}"
+  bucket = "artifact-bucket-${var.app_name}-${var.env}"
 }
 
 resource "aws_ssm_parameter" "mlflow-bucket_url" {
