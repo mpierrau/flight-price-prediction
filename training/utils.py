@@ -149,7 +149,8 @@ def prepare_data(
     target_column: str,
 ) -> tuple[pd.DataFrame, npt.ArrayLike]:
     """
-    Code for creating training dicts and target arrays.
+    Code for reading data and creating training data
+    without target, and target arrays.
 
     Args:
         df (pd.DataFrame): Dataframe with preprocessed data (features)
@@ -161,5 +162,5 @@ def prepare_data(
     """
     df = pd.read_parquet(df_path)
     y_arr = df[target_column].to_numpy()
-    df = df.drop(columns=target_column)
+    df = df.drop(columns=target_column, errors="ignore")
     return df, y_arr
