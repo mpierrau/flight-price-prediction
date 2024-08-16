@@ -119,6 +119,7 @@ def train_and_evaluate(
             log_and_upload_data(
                 data_upload_uri=data_upload_uri,
                 train_data=full_data,
+                dataset_filename=f"train_data_{experiment_id}_{NOW}.parquet",
             )
 
         if log_model:
@@ -134,7 +135,11 @@ def train_and_evaluate(
 
 
 @task
-def log_and_upload_data(data_upload_uri: str, train_data: pd.DataFrame) -> None:
+def log_and_upload_data(
+    data_upload_uri: str,
+    train_data: pd.DataFrame,
+    dataset_filename: str,
+) -> None:
     """
     A function for logging data to MLFlow as an artifact, and also uploading
     the data to an S3 bucket.
@@ -142,9 +147,8 @@ def log_and_upload_data(data_upload_uri: str, train_data: pd.DataFrame) -> None:
     Args:
         data_upload_uri (str): S3 URI where to upload data
         train_data (pd.DataFrame): Dataframe with training data
+        dataset_filename (str): name of file in bucket
     """
-    dataset_filename = f"train_data_{NOW}.parquet"
-
     dataset = pandas_dataset.from_pandas(
         df=train_data,
         source=f"s3://{data_upload_uri}/reference_data/{dataset_filename}",
