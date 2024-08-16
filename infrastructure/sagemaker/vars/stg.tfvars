@@ -1,7 +1,10 @@
 model_ecr_image_prefix = "prediction-app"
 project_id = "flight-price-prediction"
 env = "stg"
-ecr_image_tag = "latest"
 ec2_instance_type = "ml.m5.large"
-model_id = "5/d1f695107a864442a75b53638eef080f"
+model_id = ""
 aws_region = "eu-north-1"
+
+# Do not change these unless you know what you are doing
+ecr_image_tag = "latest"
+src_dir = "../../app/"

@@ -1,9 +1,9 @@
 
 resource "aws_sagemaker_model" "sagemaker_model" {
-  name = "${var.model_suffix}-model"
-  execution_role_arn = var.execution_role_arn #aws_iam_role.sagemaker_role.arn
+  name = "${var.model_prefix}-model"
+  execution_role_arn = var.execution_role_arn
   primary_container {
-    image = var.model_image_url #"${aws_ecr_repository.model_repo.name}:${var.ecr_image_tag}"
+    image = var.model_image_url
     mode = "SingleModel"
     environment = {
         MLFLOW_MODEL_URI = var.mlflow_model_uri
@@ -15,7 +15,7 @@ resource "aws_sagemaker_model" "sagemaker_model" {
 }
 
 resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config" {
-  name = "${var.model_suffix}-endpoint-config"
+  name = "${var.model_prefix}-endpoint-config"
   production_variants {
     variant_name = var.endpoint_variant_name
     model_name = aws_sagemaker_model.sagemaker_model.name
@@ -23,9 +23,31 @@ resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config" {
     instance_type = var.ec2_instance_type
     initial_variant_weight = 1.0
   }
+
+  depends_on = [ aws_sagemaker_model.sagemaker_model ]
+}
+
+# An endpoint config can't be replaced while it is being used by an endpoint
+# So to make changes to the endpoint config we first switch to this identical
+# "phony" config endpoint, make changes in the real config and then switch back
+# This is not a recommended way if one plans to update the endpoint a lot, but
+# in our case we are planning on keeping it fixed so it's fine.
+resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config_phony" {
+  name = "${var.model_prefix}-endpoint-config-phony"
+  production_variants {
+    variant_name = var.endpoint_variant_name
+    model_name = aws_sagemaker_model.sagemaker_model.name
+    initial_instance_count = 1
+    instance_type = var.ec2_instance_type
+    initial_variant_weight = 1.0
+  }
+
+  depends_on = [ aws_sagemaker_model.sagemaker_model ]
 }
 
 resource "aws_sagemaker_endpoint" "sagemaker_endpoint" {
-  name = "${var.model_suffix}-endpoint"
+  name = "${var.model_prefix}-endpoint"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config.name
+
+  depends_on = [ aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config ]
 }

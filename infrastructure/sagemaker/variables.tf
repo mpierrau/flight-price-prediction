@@ -32,3 +32,8 @@ variable "env" {
   type = string
   default = "stg"
 }
+
+variable "src_dir" {
+  description = "Directory with source code. Used to monitor for changes."
+  type = string
+}

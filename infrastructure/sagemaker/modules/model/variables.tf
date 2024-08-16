@@ -1,5 +1,5 @@
-variable "model_suffix" {
-  description = "Suffix to prepend to resource names. Typically {project_id}-{env}"
+variable "model_prefix" {
+  description = "Prefix to prepend to resource names. Typically {project_id}-{env}"
   type = string
 }
 

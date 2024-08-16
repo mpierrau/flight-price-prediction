@@ -30,20 +30,19 @@ locals {
   mlflow_model_uri = "${data.aws_ssm_parameter.mlflow_bucket_url.value}/${var.model_id}/artifacts/model/"
 }
 
-resource "aws_ecr_repository" "model_repo" {
-  name = local.ecr_image
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = false
-  }
+module "ecr" {
+  source = "./modules/ecr"
+  ecr_repo_name = local.ecr_image
+  ecr_image_tag = var.ecr_image_tag
+  region = var.aws_region
+  src_dir = var.src_dir
 }
 
 # Sets up all model endpoint resources
 module "model" {
   source = "./modules/model"
-  model_suffix = "${var.project_id}-${var.env}"
-  model_image_url = "${aws_ecr_repository.model_repo.repository_url}:${var.ecr_image_tag}"
+  model_prefix = "${var.project_id}-${var.env}"
+  model_image_url = module.ecr.model_repo_url
   mlflow_model_uri = local.mlflow_model_uri
   execution_role_arn = aws_iam_role.sagemaker_role.arn
   ec2_instance_type = var.ec2_instance_type
