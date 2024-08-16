@@ -1,0 +1,2 @@
+SVC_API_PORT="8080"
+MLFLOW_MODEL_URI="s3://{BUCKET_NAME}/{EXP_ID}/{RUN_ID}/artifacts/model/"
