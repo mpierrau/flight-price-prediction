@@ -128,7 +128,7 @@ def train_and_evaluate(
                 pipeline,
                 artifact_path="model",
                 input_example=input_example,
-                code_paths=["training/feature_engineering.py"],
+                code_paths=["training/feature_engineering.py", "training/train_model.py"],
             )
 
     return metrics
