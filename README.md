@@ -37,9 +37,9 @@ Even if you have slightly different versions installed, the code will probably s
 
 ### Update terraform state bucket
 **Go to the following files and change** `mpierrau` to some other unique identifier (the S3 bucket name needs to be unique across all of the internet):
-  - `flight-price-prediction/infrastructure/mlflow/main.tf`
-  - `flight-price-prediction/infrastructure/sagemaker/main.tf`
-  - `flight-price-prediction/infrastructure/monitoring/main.tf`
+  - [`infrastructure/mlflow/main.tf`](infrastructure/mlflow/main.tf#L9)
+  - [`infrastructure/sagemaker/main.tf`](infrastructure/sagemaker/main.tf#L9)
+  - [`infrastructure/monitoring/main.tf`](infrastructure/monitoring/main.tf#L11)
 ```terraform
 terraform {
   ...
@@ -98,7 +98,7 @@ Then we locally train and register the 3 best models. The models that are saved 
 make register_model
 ```
 
-Once the models are registered, the model id of the model with the lowest loss will be printed in the terminal. Take the Experiment ID and Run ID and **replace the current value** of `model_id` in `infrastructure/sagemaker/vars/stg.tfvars` (and `prod`) with the new values as `'{experiment_id}/{run_id}'`.
+Once the models are registered, the model id of the model with the lowest loss will be printed in the terminal. Take the Experiment ID and Run ID and **replace the current value** of `model_id` in [`stg.tfvars`](infrastructure/sagemaker/vars/stg.tfvars#L16) (and [`prod`](infrastructure/sagemaker/vars/prod.tfvars#L16)) with the new values as `'{experiment_id}/{run_id}'`.
 
 If you want to head to the MLFlow UI to find another model ID follow the instructions below.
 
@@ -110,7 +110,7 @@ make get_mlflow_info
 Go to the returned DNS adress in a browser and enter the username and password (these were automatically generated during the build process and are stored in AWS SSM).
 
 ## Serving
-Serve the model via an Sagemaker Endpoint and build related Cloudwatch alarms and a Subscribable SNS topic. If you wish to add your email to the subscription, **append your email** to the list `alarm_subscribers` in `infrastructure/sagemaker/vars/stg.tfvars` (and `prod`). Then run:
+Serve the model via an Sagemaker Endpoint and build related Cloudwatch alarms and a Subscribable SNS topic. If you wish to add your email to the subscription, **append your email** to the list `alarm_subscribers` in [`stg.tfvars`](infrastructure/sagemaker/vars/stg.tfvars#L17) (and [`prod`](infrastructure/sagemaker/vars/prod.tfvars#L17)). Then run:
 ```sh
 make build_sagemaker_infra
 ```
@@ -122,7 +122,7 @@ This can take up to 10 minutes.
 Builds an AWS Lambda function which creates an EvidentlyAI report once daily and uploads it to an S3 bucket.
 The link to the S3 bucket is outputted as `report_bucket` once this command has successfully completed.
 
-Here, again you are required to **update** `mlflow_run_id` in `infrastructure/monitoring/vars/stg.tfvars` (and `prod`) to the new `{exp_id}/{run_id}` from the training step, before running:
+Here, again you are required to **update** `mlflow_run_id` in [`infrastructure/monitoring/vars/stg.tfvars`](infrastructure/monitoring/vars/stg.tfvars) (and `prod`) to the new `{exp_id}/{run_id}` from the training step, before running:
 ```sh
 make build_monitoring_infra
 ```
