@@ -150,3 +150,14 @@ make ENV=stg destroy_all
 ```
 This rule first empties all relevant buckets and ECR repositories and then destroys all created terraform resources.
 This can take up to 15 minutes.
+
+## TODO:
+Some improvements that I have yet to complete:
+- [ ] Store EvidentlyAI metrics in AWS RDS and connect to AWS Managed Grafana
+- [ ] Add MLFlow run id as SSM parameter for easy access
+- [ ] Add new infrastructure directory for "general" infrastructure that is used in multiple infrastructure subdirectories
+- [ ] Improve integration tests using localstack
+- [ ] Store predictions and input features in new RDS instance
+  - Easily added to Sagemaker Endpoint using DataCapture
+- [ ] Utilize prefect for triggering workruns better - not just for "monitoring" and logging
+- [ ] Add data management/versioning tool (DVC or similar)
