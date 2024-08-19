@@ -72,7 +72,7 @@ make get_data
 ```sh
 make build_mlflow_infra
 ```
-This can take up to 10 minutes.
+This can take up to 15-20 minutes.
 
 We also need some infra for training, tracking and monitoring (and S3 bucket and ECR repo):
 ```sh
@@ -87,7 +87,7 @@ make preprocess_data
 
 ## Training
 ### Hyperparameter tuning
-First we do some local hyperparameter tuning on the data. Default is 30 runs, which takes a couple of minutes, depending on your machine. With the given seeds we get a model with a lowest loss of ~1900. We only log the metadata of these models - no artifacts.
+First we do some local hyperparameter tuning on the data. Default is 30 runs, which takes a couple of minutes, depending on your machine. With the given seeds we get a model with a lowest loss of ~2900 rupees. We only log the metadata of these models - no artifacts.
 ```sh
 make train_model_hyperpar_search
 ```
@@ -122,7 +122,7 @@ This can take up to 10 minutes.
 Builds an AWS Lambda function which creates an EvidentlyAI report once daily and uploads it to an S3 bucket.
 The link to the S3 bucket is outputted as `report_bucket` once this command has successfully completed.
 
-Here, again you are required to **update** `mlflow_run_id` in `infrastructure/monitoring/vars/stg.tfvars` (and `prod`) to the new `'{exp_id}/{run_id}'` from the training step, before running:
+Here, again you are required to **update** `mlflow_run_id` in `infrastructure/monitoring/vars/stg.tfvars` (and `prod`) to the new `{exp_id}/{run_id}` from the training step, before running:
 ```sh
 make build_monitoring_infra
 ```
