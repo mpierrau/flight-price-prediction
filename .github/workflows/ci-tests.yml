@@ -44,7 +44,10 @@ jobs:
             aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      # - name: Integration Tests
-      #   working-directory: "integration-tests/"
-      #   run: |
-      #     . run.sh
+      - name: Integration Tests
+        working-directory: "integration-tests/"
+        # This test will only work if there is a mlflow tracking server up and
+        # running and there exists the specified exp_id/run_id combination below
+        # TODO: avoid having to hardcode these values.
+        run: |
+          . run.sh artifact-bucket mlflow-tf prod "2/ac879e7ca3ee46f3b3ee827f40943628"
