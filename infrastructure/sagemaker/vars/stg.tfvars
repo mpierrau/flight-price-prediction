@@ -16,7 +16,7 @@ ecr_image_tag = "latest"
 src_dir = "app/"
 
 # Update me!
-model_id = "2/ac879e7ca3ee46f3b3ee827f40943628"
+model_id = "2/3d68aae418b0452a8992c73cd08515ff"
 alarm_subscribers = [
     "example@email.com"
 ]

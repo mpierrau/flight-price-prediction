@@ -1,13 +1,14 @@
 name: CI Tests
 on:
-  pull_request:
+  workflow_run:
+    workflows: [
+      "CD Deploy"
+    ]
     branches:
-      - 'develop'
-    paths:
-      - 'infrastructure/sagemaker/app/**'
-      - 'tests/'
-      - 'integration-tests/'
-
+      - develop
+      - main
+    types:
+      - completed
 env:
   AWS_DEFAULT_REGION: 'eu-north-1'
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -50,4 +51,4 @@ jobs:
         # running and there exists the specified exp_id/run_id combination below
         # TODO: avoid having to hardcode these values.
         run: |
-          . run.sh artifact-bucket mlflow-tf prod "2/ac879e7ca3ee46f3b3ee827f40943628"
+          . run.sh artifact-bucket mlflow-tf prod "2/3d68aae418b0452a8992c73cd08515ff"
