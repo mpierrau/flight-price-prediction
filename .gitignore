@@ -1,3 +1,15 @@
+# Manually added
+notebooks/
+mlruns/
+app/dotenv
+*.parquet
+.terraform/
+**/.terraform.lock.hcl
+*.zip
+data/*
+*.html
+# ---
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

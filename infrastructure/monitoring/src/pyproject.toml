@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "evidently-lambda-svc"
+version = "0.0.1"
+description = "Lambda service producing Evidently metric report"
+authors = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
+maintainers = ["Magnus Pierrau <magnus.pierrau@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = ">=3.11, <3.12"
+evidently = "0.4.33"
+nltk = "3.8.1" # Tmp patch for evidently. Should be fixed as sson as nltk 3.9 is released or 3.8.2 released again
+mlflow = "2.14.3"
+click = "8.1.7"
+boto3 = "1.34.156"
+xgboost = "2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,46 @@
+name: CD Monitoring
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'main'
+    paths:
+      - 'infrastructure/monitoring/**'
+
+env:
+  AWS_DEFAULT_REGION: "eu-north-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+            aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # Plan infrastructure for monitoring server
+      - name: TF Plan monitoring
+        id: tf-plan
+        working-directory: "infrastructure/monitoring"
+        run: |
+          terraform init -backend-config="key=flight-price-prediction-monitoring-prod.tfstate" --reconfigure && terraform plan --var-file vars/prod.tfvars
+
+      # Apply infrastructure for monitoring server
+      - name: TF Apply monitoring
+        id: tf-apply
+        working-directory: "infrastructure/monitoring"
+        if: ${{ steps.tf-plan.outcome }} == 'success'
+        run: |
+          terraform apply -auto-approve --var-file vars/prod.tfvars
