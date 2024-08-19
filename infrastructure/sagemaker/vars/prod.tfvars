@@ -5,6 +5,9 @@ project_id = "flight-price-prediction"
 model_ecr_image_prefix = "prediction-app"
 
 # Adjustable
+# Switch to your preferred region if you want
+# May require updates to ec2_instance_type if the
+# current class is not available in your region
 ec2_instance_type = "ml.m5.large"
 aws_region = "eu-north-1"
 
