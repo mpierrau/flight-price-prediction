@@ -1,23 +1,24 @@
 # Project name should be same as project_id in tfvars
 PROJECT_NAME:=flight-price-prediction
-ENV ?= prod
-DOCKER_IMAGE_NAME ?= prediction-app-${PROJECT_NAME}-${ENV}:latest
+ENV ?= stg
+PROJECT_SUFFIX:=${PROJECT_NAME}-${ENV}
+DOCKER_IMAGE_NAME ?= prediction-app-${PROJECT_SUFFIX}
 MLFLOW_APP_NAME ?= mlflow-tf
 AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query "Account" --output text)
-PAR_NAME:=/${MLFLOW_APP_NAME}/${ENV}/MLFLOW_TRACKING_PASSWORD
-MLFLOW_IMAGE_NAME ?= ${MLFLOW_APP_NAME}-${ENV}-image:latest
 
 train_model_hyperpar_search register_model: export MLFLOW_EXPERIMENT_NAME ?= ${PROJECT_NAME}
 train_model_hyperpar_search register_model: export MLFLOW_TRACKING_USERNAME ?= mlflow-user
 train_model_hyperpar_search register_model: export MLFLOW_TRACKING_PASSWORD ?= $(shell aws ssm get-parameters \
-		--names ${PAR_NAME} --with-decryption --query 'Parameters[0].Value' --output text)
+		--names /${MLFLOW_APP_NAME}/${ENV}/MLFLOW_TRACKING_PASSWORD \
+		--with-decryption --query 'Parameters[0].Value' --output text)
 train_model_hyperpar_search register_model: export MLFLOW_URI=http://$(shell aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
-register_model: export REF_DATA_BUCKET=data-${PROJECT_NAME}-${ENV}
+register_model: export REF_DATA_BUCKET=data-${PROJECT_SUFFIX}
 
 TRAIN_DATA:=data/$(shell ls data/ | grep train_data -m1)
 VAL_DATA:=data/$(shell ls data/ | grep validation_data -m1)
 
-LAMBDA_IMAGE_NAME ?= monitoring-lambda-${PROJECT_NAME}-${ENV}
+LAMBDA_IMAGE_NAME ?= monitoring-lambda-${PROJECT_SUFFIX}
+MLFLOW_IMAGE_NAME := ${MLFLOW_APP_NAME}-${PROJECT_SUFFIX}
 
 # Setting up poetry, pre-commit, prefect and terraform modules
 setup:
@@ -55,7 +56,7 @@ preprocess_data:
 # Hyperparameter search for model
 train_model_hyperpar_search:
 	unset MLFLOW_RUN_ID;\
-	poetry run python training/optimization.py ${TRAIN_DATA} $(VAL_DATA) --model-name XGBRegressor --num-trials 50 --loss-key rmse --target-column price --seed 19911991
+	poetry run python training/optimization.py ${TRAIN_DATA} $(VAL_DATA) --model-name XGBRegressor --num-trials 30 --loss-key rmse --target-column price --seed 19911991
 
 # Register best model
 # Also uploads training data to S3 bucket for data monitoring
@@ -80,7 +81,7 @@ build_monitoring_infra:
 
 # Test endpoint
 test_endpoint:
-	poetry run python integration-tests/test_endpoint.py --region ${AWS_REGION} --endpoint-name "${PROJECT_NAME}-${ENV}-endpoint"
+	poetry run python integration-tests/test_endpoint.py --region ${AWS_REGION} --endpoint-name "${PROJECT_SUFFIX}-endpoint"
 
 test:
 	pytest tests/
@@ -91,7 +92,7 @@ quality_checks:
 	pylint --recursive=y .
 
 integration_test: build
-	DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME} bash integration-tests/run.sh
+	DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:latest bash integration-tests/run.sh
 
 # Local tests
 launch_local_app:
