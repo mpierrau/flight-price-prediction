@@ -1,6 +1,6 @@
 ## Infrastructure for an AWS Sagemaker Endpoint
 
-Creates a Sagemaker Endpoint Configuration, Model and Endpoint itself (`modules/model`), based on an image pushed to ECR (`modules/ecr`). The Docker image is built and pushed in `modules/ecr/main.tf` and the code that is running is found in `app/`. The Docker image starts a FastAPI app which load the model artifacts from S3 using MLFlow on startup (make sure to update `model_id` in `vars/prod.tfvars` with the correct `{exp_id}/{run_id}`.),
+Creates a Sagemaker Endpoint Configuration, Model and Endpoint itself (`modules/model`), based on an image pushed to ECR (`modules/ecr`). The Docker image is built and pushed in `modules/ecr/main.tf` and the code that is running is found in `app/`. The Docker image starts a FastAPI app which load the model artifacts from S3 using MLFlow on startup (make sure to update `model_id` in `vars/stg.tfvars` and `vars/prod.tfvars` with the correct `{exp_id}/{run_id}`.),
 
 The `.env.template` file is for if wanting to run the model locally. See the main `README.md` for instructions.
 
