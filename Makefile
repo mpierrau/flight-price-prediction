@@ -95,7 +95,7 @@ integration_test: build
 
 # Local tests
 launch_local_app:
-	cd app/src/ && \
+	cd infrastructure/sagemaker/app/src/ && \
 	fastapi run wsgi.py --app app --port 8080
 
 predict_local:
