@@ -20,4 +20,5 @@ for i in $(seq 0 $((${#ENDPOINT_NAMES[@]}-1))); do
     fi
 done
 
+echo "NOT FOUND"
 exit 1
