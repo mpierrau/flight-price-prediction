@@ -35,13 +35,13 @@ jobs:
         shell: bash
         id: check-endpoint-exist
         run: |
-          echo $(./scripts/list_tags.sh ModelIdentifier flight-price-predictor) >> $GITHUB_OUTPUT
+          echo "ep_name_from_aws_cli=$(./scripts/list_tags.sh ModelIdentifier flight-price-predictor)" >> $GITHUB_OUTPUT
 
       # If the endpoint doesnt already exist we can just apply the entire infra
       # as-is.
       - name: TF Plan Entire Sagemaker Endpoint
         shell: bash
-        if: ${{ steps.check-endpoint-exist.outputs }} == ''
+        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} == ''
         id: plan-entire-sagemaker-infra
         working-directory: "infrastructure/sagemaker"
         run: |
@@ -60,7 +60,7 @@ jobs:
       # with the dummy config.
       - name: TF Plan Dummy Sagemaker Endpoint Config
         shell: bash
-        if: ${{ steps.check-endpoint-exist.outputs }} != ''
+        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} != ''
         id: tf-plan-dummy-config
         working-directory: "infrastructure/sagemaker"
         run: |
@@ -141,5 +141,5 @@ jobs:
         id: sagemaker-apply-new
         run: |
          aws sagemaker update-endpoint \
-            --endpoint-name ${{ steps.check-endpoint-exist.outputs }} \
+            --endpoint-name ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} \
           --endpoint-config-name ${{ steps.tf-plan-new-config.outputs.sm_ep_config_name }}
