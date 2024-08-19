@@ -1,5 +1,5 @@
 output "lambda_function" {
-  value = "${var.lambda_function_name}_${var.project_id}"
+  value = var.lambda_function_name
 }
 
 output "report_bucket" {
