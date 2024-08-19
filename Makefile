@@ -110,7 +110,9 @@ empty_s3_and_ecr:
 	./scripts/empty_ecr.sh ${LAMBDA_IMAGE_NAME};\
 	./scripts/empty_ecr.sh ${DOCKER_IMAGE_NAME}
 
-destroy_all: empty_s3_and_ecr
+destroy_all:
+	export ENV=${ENV}
+	$(MAKE) empty_s3_and_ecr
 	cd infrastructure/sagemaker;\
 	terraform destroy -var-file=vars/${ENV}.tfvars
 	cd infrastructure/monitoring;\
