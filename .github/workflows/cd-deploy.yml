@@ -5,6 +5,7 @@ on:
       - 'main'
     paths:
       - 'infrastructure/sagemaker/**'
+      - '.github/workflows/cd-deploy.yml'
 
 env:
   AWS_DEFAULT_REGION: "eu-north-1"
