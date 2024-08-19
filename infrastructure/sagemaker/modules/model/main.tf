@@ -23,17 +23,16 @@ resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config" {
     instance_type = var.ec2_instance_type
     initial_variant_weight = 1.0
   }
-
-  depends_on = [ aws_sagemaker_model.sagemaker_model ]
 }
 
 # An endpoint config can't be replaced while it is being used by an endpoint
 # So to make changes to the endpoint config we first switch to this identical
-# "phony" config endpoint, make changes in the real config and then switch back
+# "dummy" config endpoint, make changes in the real config and then switch back
 # This is not a recommended way if one plans to update the endpoint a lot, but
 # in our case we are planning on keeping it fixed so it's fine.
-resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config_phony" {
-  name = "${var.model_prefix}-endpoint-config-phony"
+# TODO: Dynamically fetch variant values from "real" config
+resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config_dummy" {
+  name = "${var.model_prefix}-endpoint-config-dummy"
   production_variants {
     variant_name = var.endpoint_variant_name
     model_name = aws_sagemaker_model.sagemaker_model.name
@@ -41,8 +40,6 @@ resource "aws_sagemaker_endpoint_configuration" "sagemaker_endpoint_config_phony
     instance_type = var.ec2_instance_type
     initial_variant_weight = 1.0
   }
-
-  depends_on = [ aws_sagemaker_model.sagemaker_model ]
 }
 
 resource "aws_sagemaker_endpoint" "sagemaker_endpoint" {
@@ -50,4 +47,8 @@ resource "aws_sagemaker_endpoint" "sagemaker_endpoint" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config.name
 
   depends_on = [ aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config ]
+
+  tags = {
+    ModelIdentifier: "flight-price-predictor"
+  }
 }

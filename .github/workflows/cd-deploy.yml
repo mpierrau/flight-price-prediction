@@ -4,7 +4,7 @@ on:
     branches:
       - 'develop'
     paths:
-      - 'app/**'
+      - 'infrastructure/sagemaker/**'
 
 env:
   AWS_DEFAULT_REGION: "eu-north-1"
@@ -29,36 +29,117 @@ jobs:
         with:
           terraform_wrapper: false
 
-      # Define infrastructure
-      - name: TF Plan
-        id: tf-plan
-        working-directory: "infrastructure/"
+      # If no endpoint exists with the specified tag - create endpoint with dummy config
+      # else - switch the endpoint to use dummy config
+      - name: Check if endpoint exists
+        shell: bash
+        id: check-endpoint-exist
         run: |
-          terraform init -backend-config="key=flight-price-prediction-prod.tfstate" --reconfigure && terraform plan --var-file vars/prod.tfvars
-          echo "ecr_repo=$(terraform output ecr_repo | xargs)" >> $GITHUB_OUTPUT
+          echo $(./scripts/list_tags.sh ModelIdentifier flight-price-predictor) >> $GITHUB_OUTPUT
 
-        # Build and push to ECR
-        # Assumes ECR is already created by TF
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-        id: login-ecr
-
-      - name: Build, tag, and push image to ECR
-        id: build-image-step
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ steps.tf-plan.outputs.ecr_repo }}
-          IMAGE_TAG: "latest"
+      # If the endpoint doesnt already exist we can just apply the entire infra
+      # as-is.
+      - name: TF Plan Entire Sagemaker Endpoint
+        shell: bash
+        if: ${{ steps.check-endpoint-exist.outputs }} == ''
+        id: plan-entire-sagemaker-infra
+        working-directory: "infrastructure/sagemaker"
         run: |
-          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} .
-          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-          echo "image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          terraform init -backend-config="key=flight-price-prediction-sagemaker-prod.tfstate" --reconfigure
+          terraform plan --var-file vars/prod.tfvars
 
-      - name: TF Apply ECR
-        id: tf-apply-ecr
-        working-directory: "infrastructure/"
-        if: ${{ steps.tf-plan.outcome }} == 'success'
+      - name: TF Apply Entire Sagemaker Endpoint
+        shell: bash
+        if: ${{ steps.plan-entire-sagemaker-infra.outcome }} == 'success'
+        id: apply-entire-sagemaker-infra
+        working-directory: "infrastructure/sagemaker"
         run: |
-          terraform apply  -auto-approve --var-file vars/prod.tfvars
-          echo "ecr_repo=$(terraform output ecr_repo | xargs)" >> $GITHUB_OUTPUT
-          echo "endpoint_name=$(terraform output endpoint_name | xargs)" >> $GITHUB_OUTPUT
+          terraform apply --var-file vars/prod.tfvars -auto-approve
+
+      # If the endpoint already exists and we want to update something we need to do the dance
+      # with the dummy config.
+      - name: TF Plan Dummy Sagemaker Endpoint Config
+        shell: bash
+        if: ${{ steps.check-endpoint-exist.outputs }} != ''
+        id: tf-plan-dummy-config
+        working-directory: "infrastructure/sagemaker"
+        run: |
+          terraform init -backend-config="key=flight-price-prediction-sagemaker-prod.tfstate" --reconfigure
+          terraform plan --var-file vars/prod.tfvars \
+            -target="module.model.aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config_dummy"
+
+      - name: TF Apply Dummy Sagemaker Endpoint Config
+        shell: bash
+        if: ${{ steps.tf-plan-dummy-config.outcome }} == 'success'
+        id: tf-apply-dummy-config
+        working-directory: "infrastructure/sagemaker"
+        run: |
+          terraform apply --var-file vars/prod.tfvars \
+            -target="module.model.aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config_dummy" \
+            -auto-approve
+          echo "sm_ep_config_name_dummy=$(terraform output endpoint_config_name_dummy | xargs)" >> $GITHUB_OUTPUT
+      # Unfortunately terraform is not allowed to destroy an Endpoint Config that is in use
+      # Therefore we must first switch config to the dummy config
+      - name: Switch endpoint to dummy configuration
+        shell: bash
+        if: ${{ steps.tf-apply-dummy-config.outcome }} == 'success'
+        id: sagemaker-apply-dummy
+        run: |
+          aws sagemaker update-endpoint \
+            --endpoint-name ${{ steps.check-endpoint-exist.outputs }} \
+            --endpoint-config-name ${{ steps.tf-plan-dummy-config.outputs.sm_ep_config_name_dummy }}
+
+      - name: Await Sagemaker endpoint resource update
+        shell: bash
+        if: ${{ steps.sagemaker-apply-dummy.outcome }} == 'success'
+        id: await-endpoint-status
+        run: |
+          for run in {1..10}; do
+            endpoint_status=$(aws sagemaker describe-endpoint \
+              --endpoint-name ${{ steps.check-endpoint-exist.outputs }} \
+              --query EndpointStatus \
+              --region ${{ env.AWS_DEFAULT_REGION }} \
+              --output text)
+
+              echo "Endpoint status: ${endpoint_status}"
+
+              if [ $endpoint_status == "InService" ]; then
+                  echo "Check complete, continuing"
+                  exit 0
+              fi
+
+              echo "Retrying, sleeping for 60 seconds"
+              sleep 60
+
+          done
+          echo "Resource creation did not complete in time, exiting"
+          exit 1
+
+      - name: TF Plan New Sagemaker Endpoint Config
+        shell: bash
+        if: ${{ steps.await-endpoint-status.outcome }} == 'success'
+        id: tf-plan-new-config
+        working-directory: "infrastructure/sagemaker"
+        run: |
+          terraform plan --var-file vars/prod.tfvars \
+            -target="module.model.aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config"
+          echo "sm_ep_config_name=$(terraform output endpoint_config_name | xargs)" >> $GITHUB_OUTPUT
+
+      - name: TF Apply Dummy Sagemaker Endpoint Config
+        shell: bash
+        if: ${{ steps.tf-plan-new-config.outcome }} == 'success'
+        id: tf-apply-new-config
+        working-directory: "infrastructure/sagemaker"
+        run: |
+          terraform apply --var-file vars/prod.tfvars \
+            -target="module.model.aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config" \
+            -auto-approve
+
+      - name: Switch endpoint to new configuration
+        shell: bash
+        if: ${{ steps.tf-apply-new-config.outcome }} == 'success'
+        id: sagemaker-apply-new
+        run: |
+         aws sagemaker update-endpoint \
+            --endpoint-name ${{ steps.check-endpoint-exist.outputs }} \
+          --endpoint-config-name ${{ steps.tf-plan-new-config.outputs.sm_ep_config_name }}

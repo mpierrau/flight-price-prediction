@@ -38,13 +38,17 @@ module "ecr" {
   src_dir = var.src_dir
 }
 
+module "iam" {
+  source = "./modules/iam"
+}
+
 # Sets up all model endpoint resources
 module "model" {
   source = "./modules/model"
   model_prefix = "${var.project_id}-${var.env}"
   model_image_url = module.ecr.model_repo_url
   mlflow_model_uri = local.mlflow_model_uri
-  execution_role_arn = aws_iam_role.sagemaker_role.arn
+  execution_role_arn = module.iam.sagemaker_role_arn
   ec2_instance_type = var.ec2_instance_type
   endpoint_variant_name = "variant-1"
 }
