@@ -101,3 +101,19 @@ launch_local_app:
 
 predict_local:
 	curl -X "POST" "http://localhost:8080/invocations" -d @integration-tests/data.json
+
+# Teardown
+empty_s3_and_ecr:
+	aws s3 rm s3://artifact-bucket-${MLFLOW_APP_NAME}-${ENV} --recursive;\
+	aws s3 rm s3://data-${PROJECT_SUFFIX} --recursive;\
+	aws s3 rm s3://data-report-${PROJECT_SUFFIX} --recursive;\
+	./scripts/empty_ecr.sh ${LAMBDA_IMAGE_NAME};\
+	./scripts/empty_ecr.sh ${DOCKER_IMAGE_NAME}
+
+destroy_all: empty_s3_and_ecr
+	cd infrastructure/sagemaker;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
+	cd infrastructure/monitoring;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
+	cd infrastructure/mlflow;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
