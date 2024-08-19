@@ -28,7 +28,7 @@ locals {
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {
-  name                = "${var.lambda_function_name}-cron-schedule"
+  name                = "${var.lambda_function_name}-schedule"
   description         = "Cron trigger for lambda ${var.lambda_function_name}"
   schedule_expression = local.schedule
 }
