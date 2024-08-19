@@ -1,4 +1,4 @@
-name: CD Deploy
+name: CD MLFlow
 on:
   push:
     branches:
