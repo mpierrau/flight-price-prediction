@@ -155,6 +155,9 @@ This rule first empties all relevant buckets and ECR repositories and then destr
 This can take up to 15 minutes.
 
 ## TODO:
+One remaining bug:
+- [ ] Something is wrong in step `check-endpoint-exist` of the [cd-deploy workflow](.github/workflows/cd-deploy.yml#L41), but I cannot figure out what the issue is right now. However, the resources are still deployed, so it doesn't hinder the application for now, although it will need to be fixed before we can do updates to the endpoint on the fly.
+
 Some improvements that I have yet to complete:
 - [ ] Store EvidentlyAI metrics in AWS RDS and connect to AWS Managed Grafana
 - [ ] Add MLFlow run id as SSM parameter for easy access
