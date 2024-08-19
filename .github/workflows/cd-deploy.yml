@@ -43,7 +43,7 @@ jobs:
       # as-is.
       - name: TF Plan Entire Sagemaker Endpoint
         shell: bash
-        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} == ''
+        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} == 'NOT FOUND'
         id: plan-entire-sagemaker-infra
         working-directory: "infrastructure/sagemaker"
         run: |
@@ -62,7 +62,7 @@ jobs:
       # with the dummy config.
       - name: TF Plan Dummy Sagemaker Endpoint Config
         shell: bash
-        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} != ''
+        if: ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} != 'NOT FOUND'
         id: tf-plan-dummy-config
         working-directory: "infrastructure/sagemaker"
         run: |
@@ -80,8 +80,10 @@ jobs:
             -target="module.model.aws_sagemaker_endpoint_configuration.sagemaker_endpoint_config_dummy" \
             -auto-approve
           echo "sm_ep_config_name_dummy=$(terraform output endpoint_config_name_dummy | xargs)" >> $GITHUB_OUTPUT
+
       # Unfortunately terraform is not allowed to destroy an Endpoint Config that is in use
-      # Therefore we must first switch config to the dummy config
+      # Therefore we must first switch config to the dummy config, update the old config
+      # and then switch back
       - name: Switch endpoint to dummy configuration
         shell: bash
         if: ${{ steps.tf-apply-dummy-config.outcome }} == 'success'
@@ -96,7 +98,7 @@ jobs:
         if: ${{ steps.sagemaker-apply-dummy.outcome }} == 'success'
         id: await-endpoint-status
         run: |
-          for run in {1..10}; do
+          for run in {1..20}; do
             endpoint_status=$(aws sagemaker describe-endpoint \
               --endpoint-name ${{ steps.check-endpoint-exist.outputs }} \
               --query EndpointStatus \
@@ -110,8 +112,8 @@ jobs:
                   exit 0
               fi
 
-              echo "Retrying, sleeping for 60 seconds"
-              sleep 60
+              echo "Retrying, sleeping for 30 seconds"
+              sleep 30
 
           done
           echo "Resource creation did not complete in time, exiting"
