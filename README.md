@@ -7,7 +7,7 @@ Developed on Ubuntu 23.10 and 24.04.
 
 The preprocessing and training is monitored/logged using `prefect`. All runs can be reviewed using the Prefect Cloud UI.
 
-All infrastructure is managed by Terraform.
+All infrastructure is managed by Terraform. If anything fails during the `apply` stage the issue may resolve itself by running `terraform apply` (or the `make` command) one more time. If the error persists then something else is the issue.
 
 ## Setup
 
@@ -75,17 +75,19 @@ Once the models are registered, the model id of the model with the lowest loss w
 
 If you want to head to the MLFlow UI to find another model ID follow the instructions below.
 
-### To open the AWS MLFlow UI:
+### To open the AWS MLFlow UI
+Run:
 ```sh
 make get_mlflow_info
 ```
 Go to the returned DNS adress in a browser and enter the username and password (these were automatically generated during the build process and are stored in AWS SSM).
 
 ## Serving
-Serve the model via an Sagemaker Endpoint and build related Cloudwatch alarms and an SNS topic (which is easily subscribable by email or mobile phone):
+Serve the model via an Sagemaker Endpoint and build related Cloudwatch alarms and a Subscribable SNS topic. If you wish to add your email to the subscription, append your email to the list `alarm_subscribers` in `infrastructure/sagemaker/vars/prod.tfvars`. Then run:
 ```sh
 make build_sagemaker_infra
 ```
+You will receive a confirmation email in which you need to confirm the subscription. Please note that Terraform does not have the capability to keep track of which subscriptions are confirmed or not, which may cause issues when destroying this resource if the subscription has not been confirmed. See the [documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) for more information.
 
 ## Monitoring
 Builds an AWS Lambda function which creates an EvidentlyAI report once daily and uploads it to an S3 bucket.
