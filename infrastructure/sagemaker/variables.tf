@@ -30,7 +30,6 @@ variable "model_id" {
 variable "env" {
   description = "Set variable depending on environemnt - appended to resources."
   type = string
-  default = "stg"
 }
 
 variable "src_dir" {
