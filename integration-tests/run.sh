@@ -6,7 +6,7 @@
 BUCKET_PREFIX=${1:-artifact-bucket}
 MLFLOW_APP_NAME=${2:-mlflow-tf}
 ENV=${3:-stg}
-MLFLOW_RUN_ID=${4:-"2/ac879e7ca3ee46f3b3ee827f40943628"}
+MLFLOW_RUN_ID=${4:-"2/3d68aae418b0452a8992c73cd08515ff"}
 
 if [[ -z "${GITHUB_ACTIONS}" ]]; then
     cd "$(dirname "$0")"
