@@ -37,3 +37,8 @@ variable "src_dir" {
   description = "Directory with source code. Used to monitor for changes."
   type = string
 }
+
+variable "alarm_subscribers" {
+  description = "Email adresses for all subscribers to the Sagemaker Cloudwatch alarms."
+  type = list(string)
+}

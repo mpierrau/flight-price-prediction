@@ -20,7 +20,7 @@ provider "aws" {
 
 data "aws_caller_identity" "current_identity" {}
 
-# SSM parameter setup by mlflow infra
+# SSM parameter from mlflow infra
 data "aws_ssm_parameter" "mlflow_bucket_url" {
   name  = "/mlflow-tf/${var.env}/ARTIFACT_URL"
 }
@@ -53,6 +53,19 @@ module "model" {
 resource "aws_sns_topic" "alarm_sns_topic" {
   name = "sagemaker_endpoint_alarms"
   display_name = "Sagemaker Alarm"
+}
+
+# Subscribers to the alarm topic
+# NOTE: Terraform cannot keep track of which subscribers have
+# confirmed their subscription. This may cause issues when destroying
+# the topic if there are users which haven't confirmed.
+# See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription
+# for more information.
+resource "aws_sns_topic_subscription" "alarm_topic_subscription" {
+  for_each  = toset(var.alarm_subscribers)
+  topic_arn = aws_sns_topic.alarm_sns_topic.arn
+  protocol  = "email"
+  endpoint  = each.value
 }
 
 module "alarms" {
