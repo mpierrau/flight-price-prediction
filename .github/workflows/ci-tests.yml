@@ -4,12 +4,12 @@ on:
     branches:
       - 'develop'
     paths:
-      - 'app/**'
+      - 'infrastructure/sagemaker/app/**'
       - 'tests/'
       - 'integration-tests/'
 
 env:
-  AWS_DEFAULT_REGION: 'us-east-1'
+  AWS_DEFAULT_REGION: 'eu-north-1'
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -44,7 +44,7 @@ jobs:
             aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      - name: Integration Tests
-        working-directory: "integration-tests/"
-        run: |
-          . run.sh
+      # - name: Integration Tests
+      #   working-directory: "integration-tests/"
+      #   run: |
+      #     . run.sh

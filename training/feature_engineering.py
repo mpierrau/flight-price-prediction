@@ -5,8 +5,28 @@ Written by Magnus Pierrau for MLOps Zoomcamp Final Project Cohort 2024
 """
 
 import calendar
+from datetime import datetime
 
 import pandas as pd
+
+
+def get_weekday_or_unknown(date: datetime | None) -> str:
+    """
+    Get the weekday of the given date. If some error
+    occurs we just return "Unknown".
+
+    Args:
+        date (datetime | None): datetime object
+
+    Returns:
+        str: Capitalized three-letter abbreviation of weekday in
+            english, e.g. "Mon", "Thu", "Sun".
+    """
+    try:
+        weekday = calendar.day_abbr[date.weekday()]
+    except (TypeError, IndexError, ValueError):
+        weekday = "Unknown"
+    return weekday
 
 
 def create_weekday_feature(df: pd.DataFrame) -> pd.Series:
@@ -22,8 +42,10 @@ def create_weekday_feature(df: pd.DataFrame) -> pd.Series:
         pd.Series: Series containing the created feature
     """
     dates = df[["date", "month", "year"]].astype(dtype=str)
-    full_date = pd.to_datetime(dates.year + ' ' + dates.month + ' ' + dates.date)
-    weekday_abbrs = full_date.apply(lambda x: calendar.day_abbr[x.weekday()])
+    full_date_string = pd.to_datetime(
+        dates.year + ' ' + dates.month + ' ' + dates.date, format="%Y %M %d", errors="coerce"
+    )
+    weekday_abbrs = full_date_string.apply(get_weekday_or_unknown)
     return weekday_abbrs
 
 
@@ -62,19 +84,25 @@ def create_rounded_arrival_and_departure_times(
     """
     cols = ["dep_hours", "dep_min", "arrival_hours", "arrival_min"]
     arr_dep_times = df[cols].astype(str)
+    # Add leading zeros
+    for col in cols:
+        arr_dep_times[col] = arr_dep_times[col].apply(lambda x: x.zfill(2))
 
     dep_closest_full_hour = (
         pd.to_datetime(
             arr_dep_times["dep_hours"] + ":" + arr_dep_times["dep_min"],
             format="%H:%M",
+            errors="coerce",
         )
         .dt.round('h')
         .dt.hour
     )
+
     arr_closest_full_hour = (
         pd.to_datetime(
             arr_dep_times["arrival_hours"] + ":" + arr_dep_times["arrival_min"],
             format="%H:%M",
+            errors="coerce",
         )
         .dt.round('h')
         .dt.hour

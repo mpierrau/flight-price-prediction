@@ -65,7 +65,10 @@ class SagemakerPredictor:
     "--region", type=str, default="eu-north-1", help="AWS region hosting Sagemaker endpoint"
 )
 @click.option(
-    "--endpoint-name", type=str, default="flight-price-endpoint", help="Name of Sagemaker endpoint"
+    "--endpoint-name",
+    type=str,
+    default="flight-price-prediction-endpoint-stg",
+    help="Name of Sagemaker endpoint",
 )
 def prediction_test(
     region: str,

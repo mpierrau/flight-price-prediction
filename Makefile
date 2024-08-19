@@ -1,6 +1,87 @@
-LOCAL_TAG:=$(shell date +"%Y-%m-%d-%H-%M")
-LOCAL_IMAGE_NAME:=flight-price-prediction:${LOCAL_TAG}
-SVC_API_PORT:=8080
+# Project name should be same as project_id in tfvars
+PROJECT_NAME:=flight-price-prediction
+ENV ?= stg
+PROJECT_SUFFIX:=${PROJECT_NAME}-${ENV}
+DOCKER_IMAGE_NAME ?= prediction-app-${PROJECT_SUFFIX}
+MLFLOW_APP_NAME ?= mlflow-tf
+AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query "Account" --output text)
+
+train_model_hyperpar_search register_model: export MLFLOW_EXPERIMENT_NAME ?= ${PROJECT_NAME}
+train_model_hyperpar_search register_model: export MLFLOW_TRACKING_USERNAME ?= mlflow-user
+train_model_hyperpar_search register_model: export MLFLOW_TRACKING_PASSWORD ?= $(shell aws ssm get-parameters \
+		--names /${MLFLOW_APP_NAME}/${ENV}/MLFLOW_TRACKING_PASSWORD \
+		--with-decryption --query 'Parameters[0].Value' --output text)
+train_model_hyperpar_search register_model: export MLFLOW_URI=http://$(shell aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
+register_model: export REF_DATA_BUCKET=data-${PROJECT_SUFFIX}
+
+TRAIN_DATA:=data/$(shell ls data/ | grep train_data -m1)
+VAL_DATA:=data/$(shell ls data/ | grep validation_data -m1)
+
+LAMBDA_IMAGE_NAME ?= monitoring-lambda-${PROJECT_SUFFIX}
+MLFLOW_IMAGE_NAME := ${MLFLOW_APP_NAME}-${PROJECT_SUFFIX}
+
+# Setting up poetry, pre-commit, prefect and terraform modules
+setup:
+	poetry lock --no-update
+	poetry install --with dev
+	pre-commit install
+	prefect cloud login
+	cd infrastructure/mlflow/;\
+	terraform init;
+	cd infrastructure/sagemaker/;\
+	terraform init;
+	cd infrastructure/monitoring/;\
+	terraform init;
+
+# Downloading data from kaggle
+get_data:
+	poetry run kaggle datasets download -d viveksharmar/flight-price-data -p data/; \
+	unzip -o data/flight-price-data.zip -d data/
+
+# Building rest of MLFlow server infra
+build_mlflow_infra:
+	cd infrastructure/mlflow/; \
+	terraform apply -var-file="vars/${ENV}.tfvars"
+
+# S3 Bucket for Data storage
+# ECR for Monitoring container
+build_data_infra:
+	cd infrastructure/monitoring/; \
+	terraform apply -target="aws_s3_bucket.data_bucket" -target="module.ecr.aws_ecr_repository.monitor_repo" -var-file="vars/${ENV}.tfvars"
+
+# Preprocessing data
+preprocess_data:
+	poetry run python training/preprocess_data.py data/flight_dataset.csv
+
+# Hyperparameter search for model
+train_model_hyperpar_search:
+	unset MLFLOW_RUN_ID;\
+	poetry run python training/optimization.py ${TRAIN_DATA} $(VAL_DATA) --model-name XGBRegressor --num-trials 30 --loss-key rmse --target-column price --seed 19911991
+
+# Register best model
+# Also uploads training data to S3 bucket for data monitoring
+register_model:
+	unset MLFLOW_RUN_ID;\
+	poetry run python training/register_model.py ${TRAIN_DATA} ${VAL_DATA} -n 3 -e ${MLFLOW_EXPERIMENT_NAME} -uri ${MLFLOW_URI} -t price -s 19911991
+
+get_mlflow_info:
+	@echo Adress: http://$(shell aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
+	@echo Username: mlflow-user
+	@echo Password: $(shell aws ssm get-parameters --names /${MLFLOW_APP_NAME}/${ENV}/MLFLOW_TRACKING_PASSWORD --with-decryption --query 'Parameters[0].Value' --output text)
+
+# Setup Sagemaker Endpoint infra
+build_sagemaker_infra:
+	cd infrastructure/sagemaker/; \
+	terraform apply -var-file="vars/${ENV}.tfvars"
+
+# Setup monitoring lambda
+build_monitoring_infra:
+	cd infrastructure/monitoring/; \
+	terraform apply -var-file="vars/${ENV}.tfvars"
+
+# Test endpoint
+test_endpoint:
+	poetry run python integration-tests/test_endpoint.py --region ${AWS_REGION} --endpoint-name "${PROJECT_SUFFIX}-endpoint"
 
 test:
 	pytest tests/
@@ -10,23 +91,31 @@ quality_checks:
 	black .
 	pylint --recursive=y .
 
-build: quality_checks test
-	docker build -t ${LOCAL_IMAGE_NAME} .
-
 integration_test: build
-	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integration-tests/run.sh
+	DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}:latest bash integration-tests/run.sh
 
-launch_app:
-	cd src/; \
-	fastapi run wsgi.py --app app
+# Local tests
+launch_local_app:
+	cd infrastructure/sagemaker/app/src/ && \
+	fastapi run wsgi.py --app app --port 8080
 
-predict:
-	curl -X "POST" "http://localhost:8000/invocations" -d @integration-tests/data.json | jq
+predict_local:
+	curl -X "POST" "http://localhost:8080/invocations" -d @integration-tests/data.json
 
-publish: build integration_test
-	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
+# Teardown
+empty_s3_and_ecr:
+	aws s3 rm s3://artifact-bucket-${MLFLOW_APP_NAME}-${ENV} --recursive;\
+	aws s3 rm s3://data-${PROJECT_SUFFIX} --recursive;\
+	aws s3 rm s3://data-report-${PROJECT_SUFFIX} --recursive;\
+	./scripts/empty_ecr.sh ${LAMBDA_IMAGE_NAME};\
+	./scripts/empty_ecr.sh ${DOCKER_IMAGE_NAME}
 
-setup:
-	poetry lock --no-update
-	poetry install --with dev
-	pre-commit install
+destroy_all:
+	export ENV=${ENV}
+	$(MAKE) empty_s3_and_ecr
+	cd infrastructure/sagemaker;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
+	cd infrastructure/monitoring;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
+	cd infrastructure/mlflow;\
+	terraform destroy -var-file=vars/${ENV}.tfvars
