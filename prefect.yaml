@@ -27,7 +27,7 @@ deployments:
   description: Download and preprocess data, i.e. perform feature engineering and train/test split.
   schedule: {}
   flow_name: null
-  entrypoint: preprocessing/preprocess_data.py:preprocess_data
+  entrypoint: training/preprocess_data.py:preprocess_data
   parameters:
     {
       'data': 'data/flight_dataset.csv',

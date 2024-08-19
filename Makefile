@@ -50,7 +50,7 @@ build_data_infra:
 
 # Preprocessing data
 preprocess_data:
-	poetry run python preprocessing/preprocess_data.py data/flight_dataset.csv
+	poetry run python training/preprocess_data.py data/flight_dataset.csv
 
 # Hyperparameter search for model
 train_model_hyperpar_search:
