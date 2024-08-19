@@ -10,6 +10,9 @@ Please note that this project does create resources on AWS which may incur some 
 ## Prerequisites:
 - An AWS Account
 - Prefect Cloud Account (create one for free [here]((https://docs.prefect.io/2.14.2/getting-started/quickstart/#step-2-connect-to-prefects-api)))
+- Add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to the Github repo of you wish to test the Github workflows.
+  - [How to create access key and secret](https://repost.aws/knowledge-center/create-access-key)
+  - `Repo -> Settings -> Secrets and variables -> Actions -> New repository secret`
 
 The project was developed and tested on Ubuntu 23.10 and 24.04.
 
