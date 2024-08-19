@@ -4,7 +4,7 @@ on:
     branches:
       - 'develop'
     paths:
-      - 'app/**'
+      - 'infrastructure/sagemaker/app/**'
       - 'tests/'
       - 'integration-tests/'
 
