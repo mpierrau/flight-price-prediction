@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'develop'
     paths:
       - 'infrastructure/sagemaker/**'
       - '.github/workflows/cd-deploy.yml'
@@ -38,6 +39,7 @@ jobs:
         id: check-endpoint-exist
         run: |
           echo "ep_name_from_aws_cli=$(./scripts/list_tags.sh ModelIdentifier flight-price-predictor)" >> $GITHUB_OUTPUT
+          echo $(./scripts/list_tags.sh ModelIdentifier flight-price-predictor)
 
       # If the endpoint doesnt already exist we can just apply the entire infra
       # as-is.
@@ -145,5 +147,5 @@ jobs:
         id: sagemaker-apply-new
         run: |
          aws sagemaker update-endpoint \
-            --endpoint-name ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} \
+          --endpoint-name ${{ steps.check-endpoint-exist.outputs.ep_name_from_aws_cli }} \
           --endpoint-config-name ${{ steps.tf-plan-new-config.outputs.sm_ep_config_name }}

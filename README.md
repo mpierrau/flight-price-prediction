@@ -10,6 +10,9 @@ Please note that this project does create resources on AWS which may incur some 
 ## Prerequisites:
 - An AWS Account
 - Prefect Cloud Account (create one for free [here]((https://docs.prefect.io/2.14.2/getting-started/quickstart/#step-2-connect-to-prefects-api)))
+- Add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to the Github repo of you wish to test the Github workflows.
+  - [How to create access key and secret](https://repost.aws/knowledge-center/create-access-key)
+  - `Repo -> Settings -> Secrets and variables -> Actions -> New repository secret`
 
 The project was developed and tested on Ubuntu 23.10 and 24.04.
 
@@ -152,6 +155,9 @@ This rule first empties all relevant buckets and ECR repositories and then destr
 This can take up to 15 minutes.
 
 ## TODO:
+One remaining bug:
+- [ ] Something is wrong in step `check-endpoint-exist` of the [cd-deploy workflow](.github/workflows/cd-deploy.yml#L41), but I cannot figure out what the issue is right now. However, the resources are still deployed, so it doesn't hinder the application for now, although it will need to be fixed before we can do updates to the endpoint on the fly.
+
 Some improvements that I have yet to complete:
 - [ ] Store EvidentlyAI metrics in AWS RDS and connect to AWS Managed Grafana
 - [ ] Add MLFlow run id as SSM parameter for easy access
